@@ -26,12 +26,12 @@ cost_surface <- exp(cost_parameter * landscape^2)
 transistion_surface <- geoCorrection(
                         transition(cost_surface,
                                    transitionFunction = function(x) (1/(mean(x))),
-                                   direction = 8),
+                                   direction = 16),
                        scl = F)
 
 
 # Create state space ------------------------------------------------------
-res <- 0.25
+res <- 0.125
 statespace <- data.frame(
                expand.grid(
                 X = seq(round(bbox(cost_surface)[1,1])+res/2,
@@ -71,7 +71,7 @@ traplocs <- as.matrix(
 plot(cost_surface, col=adjustcolor(viridis(100,option="A",direction=-1),0.6),axes=FALSE)
 points(statespace, col="black", pch=16, cex=0.1)
 points(traplocs, pch=15, col="blue")
-points(acs, pch=16, col="red", cex = 0.7)
+points(acs, pch=16, col="red", cex = 0.2)
 
 test_n <- 5
 which_test_acs <- sample(1:nrow(acs),test_n)
@@ -86,16 +86,16 @@ plot(st_geometry(test_ac), add=TRUE, bg = "red", pch=21, cex=1.5)
 
 # Telemetry points --------------------------------------------------------
 
-telemetry_n <- 9
+telemetry_n <- 16
 which_telemetered_acs <- sample(1:nrow(acs), telemetry_n)
 telemetered_acs <- acs[which_telemetered_acs,]
-n_fixes <- 90
+n_fixes <- 90*24
 n_by_cell_freq <- matrix(NA,nrow=telemetry_n,ncell(cost_surface))
 
-view_multiplier <- 3
+view_multiplier <- 5
 plotit <- TRUE
 
-par(mfrow=c(3,3), oma=c(0,0,0,0),mar=c(1,1,1,1))
+par(mfrow=c(4,4), oma=c(0,0,0,0),mar=c(1,1,1,1))
 for(i in 1:telemetry_n){
   tmp_from <- matrix(telemetered_acs[i,],1,2,byrow=TRUE)
   tmp_to <- coordinates(cost_surface)
@@ -122,7 +122,7 @@ for(i in 1:telemetry_n){
   
     plot(tmp_rsf_clip, axes=FALSE, legend=FALSE, col = viridis(100,option="A", direction=-1, alpha = 0.5))
     plot(st_geometry(st_buffer(tmp_ac,sqrt(5.99)*sigma)), add=TRUE)
-    points(coordinates(cost_surface), cex=sqrt(n_by_cell_freq[i,]), pch=16, col=adjustcolor(1,0.5))
+    points(coordinates(cost_surface), cex=sqrt(n_by_cell_freq[i,])/2, pch=16, col=adjustcolor(1,0.2))
     plot(tmp_ac,add=TRUE, pch=16, col=2, cex=2)
   }
 }
