@@ -69,7 +69,7 @@ traplocs <- as.matrix(
 
 # A vizual test -----------------------------------------------------------
 plot(cost_surface, col=adjustcolor(viridis(100,option="A",direction=-1),0.6),axes=FALSE)
-points(statespace, col="black", pch=16, cex=0.1)
+points(statespace, col="black", pch=".")
 points(traplocs, pch=15, col="blue")
 points(acs, pch=16, col="red", cex = 0.2)
 
@@ -80,7 +80,7 @@ test_ac <- st_as_sf(x = data.frame(id = 1:test_n,
                                    Y = acs[which_test_acs,2]),
                     coords = c("X","Y"))  
 test_95hr <- st_buffer(test_ac,sqrt(5.99)*sigma, joinStyle = )
-plot(st_geometry(test_95hr), add=TRUE, col = adjustcolor("black",0.2))
+plot(st_geometry(test_95hr), add=TRUE, col = adjustcolor("black",0.1))
 plot(st_geometry(test_ac), add=TRUE, bg = "red", pch=21, cex=1.5)
 
 
