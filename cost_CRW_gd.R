@@ -237,8 +237,96 @@ nextStep %>%
   scale_fill_viridis() +
   coord_equal()
 
+# But it's adding some noise to the ladscape due to the turning angle
 
 
+#----Make this iterative----
 
+# Just make a first step to test TrajAngles
+step_1 <- c(acs[,1]+runif(1,-0.2,0.2), acs[,2]+runif(1,-0.2,0.2))
+steps <- as.data.frame(rbind(acs, step_1))
+steps$times <- 0:(nrow(steps)-1)
+colnames(steps) <- c("x", "y", "times")
+rownames(steps) <- NULL
 
+# Plot d_lcp and first step
+plot(r_dlcp, col=viridis(1000))
+points(acs, pch = 20, cex = 2, col = "red")
+lines(steps, lwd=2, col = "red")
+
+# Loop through pngs
+pings <- 90*24
+for(i in 1:pings){
+  
+  cat(i, "\n")
+  
+  # Loop through ss pixels, calculate angle from x1y1 for each
+  theta <- c()
+  theta_probd <- c()
+  for(j in 1:nrow(df_dlcp)){
+    
+    # Last step for relative turning angle
+    step_start <- nrow(steps)-1
+    step_end <- nrow(steps)
+    
+    # Bind last step with each possible step
+    tmp_coords <- rbind(
+      steps[step_start:step_end,c("x","y")],
+      df_dlcp[j,c("x","y")])
+    rownames(tmp_coords) <- NULL
+    
+    tmp_coords$times <- 0:(nrow(tmp_coords)-1)
+    
+    # Make this a trj object
+    trj <- TrajFromCoords(tmp_coords)
+    
+    # Calculate angle
+    theta[j] <- TrajAngles(trj = trj)
+    
+    # Calculate probability density of the relative turning angle surface
+    theta_probd[j] <- dwrappedcauchy(x = theta[j], mu=circular(0), rho=0.2)
+    #theta_probd[j] <- dnorm(x = theta[j], mean = 0, sd = 0.3) # Similar to dnorm
+  }
+  
+  # Calculate probability density of next step using multiplicative relationship between cost and theta
+  cost_nextStep <- cbind(df_dlcp[,1:2], prob_cost)
+  theta_nextStep <- cbind(df_dlcp[,1:2], theta_probd)
+  r_nextStep <- rasterFromXYZ(cost_nextStep) * rasterFromXYZ(theta_nextStep)
+  
+  # Make it a df to sample
+  df_nextStep <- as.data.frame(r_nextStep, xy=T)
+  colnames(df_nextStep) <- c("x", "y", "prob")
+  
+  # Sample according to multiplicative probabilities
+  idx <- base::sample(x = nrow(df_nextStep), size = 1, prob = df_nextStep[,"prob"], replace=T)
+  nextStep <- df_nextStep[idx,1:2]
+  nextStep$times <- steps$times[nrow(steps)] + 1
+  
+  # Append selected step to next step
+  steps <- rbind(steps, nextStep)
+  
+}
+
+# Plot d_lcp and first step
+plot(r_dlcp, col=viridis(1000))
+points(acs, pch = 20, cex = 2, col = "red")
+lines(steps, lwd=2, col = "red")
+
+# Plot dlcp surface
+ggplot(data = df_dlcp, aes(x = x, y = y)) +
+  geom_raster(aes(fill = cost)) +
+  geom_point(data = as.data.frame(acs), 
+             aes(x = X, y = Y), color = "red") +
+  geom_path(data=steps, aes(x=x, y=y), color = "red", lwd=0.2) +
+  coord_equal() +
+  scale_fill_viridis()
+
+# Checking if we can recover original distribution
+steps %>%
+  group_by(x, y) %>%
+  summarise(count = n()) %>%
+  ggplot(aes(x, y)) +
+  geom_raster(aes(fill = count)) +
+  scale_fill_viridis() +
+  coord_equal()
 
