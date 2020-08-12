@@ -9,6 +9,8 @@ library(circular)
 library(ggplot2)
 library(viridis)
 library(dplyr)
+library(patchwork)
+area <- raster::area
 
 set.seed(202006)
 
@@ -243,7 +245,7 @@ nextStep %>%
 #----Make this iterative----
 
 # Just make a first step to test TrajAngles
-step_1 <- c(acs[,1]+runif(1,-0.2,0.2), acs[,2]+runif(1,-0.2,0.2))
+step_1 <- df_dlcp %>% arrange(desc(cost)) %>% slice(1) %>% select(x,y) %>% matrix(1,2)
 steps <- as.data.frame(rbind(acs, step_1))
 steps$times <- 0:(nrow(steps)-1)
 colnames(steps) <- c("x", "y", "times")
@@ -255,7 +257,7 @@ points(acs, pch = 20, cex = 2, col = "red")
 lines(steps, lwd=2, col = "red")
 
 # Loop through pngs
-pings <- 90*24
+pings <- 90*24*10
 for(i in 1:pings){
   
   cat(i, "\n")
@@ -288,8 +290,43 @@ for(i in 1:pings){
     #theta_probd[j] <- dnorm(x = theta[j], mean = 0, sd = 0.3) # Similar to dnorm
   }
   
+  ######## Step-specific least-cost path based on activity center specific cost surface. Still in progress.
+  
+  # # Create tansition surface
+  # tmp_transistion_surface <- geoCorrection(
+  #   transition(
+  #     r_dlcp,
+  #     transitionFunction = function(x) (1/(mean(x))),
+  #     direction = 16),
+  #   scl = F)
+  # 
+  # # Points for LCP
+  # tmp_x1y1 <- steps %>% slice(nrow(.)) %>% select(x,y) %>% as.matrix() %>% unlist() %>% as.numeric()
+  # tmp_x2y2 <- coordinates(r_dlcp)
+  # 
+  # # Calculate LCP per-pixel from AC
+  # tmp_telem_rsf_dmat <- costDistance(
+  #   tmp_transistion_surface,
+  #   fromCoords = tmp_x1y1,
+  #   toCoords = tmp_x2y2)
+  # 
+  # # Final: per-pixel cost distance based on current step.
+  # tmp_r_dlcp <- rasterFromXYZ(cbind(df_dlcp[,c("x", "y")], t(tmp_telem_rsf_dmat)))
+  # #plot(tmp_r_dlcp)
+  # 
+  # # Convert to data frame and convert to probabilities
+  # tmp_df_dlcp <- as.data.frame(tmp_r_dlcp, xy=T)
+  # colnames(tmp_df_dlcp) <- c("x", "y", "cost")
+  # 
+  # b0 <- -1
+  # b1 <- 1
+  # tmp_prob_stepCost <- 1 - exp(b0 + b1*tmp_df_dlcp$cost)/sum(exp(b0 + b1*tmp_df_dlcp$cost))
+  
+  ########
+  
   # Calculate probability density of next step using multiplicative relationship between cost and theta
-  cost_nextStep <- cbind(df_dlcp[,1:2], prob_cost)
+  cost_nextStep <- cbind(df_dlcp[,1:2], prob_cost) # Original, using AC-specific cost
+  #cost_nextStep <- cbind(df_dlcp[,1:2], tmp_prob_stepCost) # swapping out prob_cost here with step-specific perspective of LCP
   theta_nextStep <- cbind(df_dlcp[,1:2], theta_probd)
   r_nextStep <- rasterFromXYZ(cost_nextStep) * rasterFromXYZ(theta_nextStep)
   
@@ -298,7 +335,7 @@ for(i in 1:pings){
   colnames(df_nextStep) <- c("x", "y", "prob")
   
   # Sample according to multiplicative probabilities
-  idx <- base::sample(x = nrow(df_nextStep), size = 1, prob = df_nextStep[,"prob"], replace=T)
+  idx <- base::sample(x = nrow(df_nextStep), size = 1, prob = df_nextStep[,"prob"], replace=F)
   nextStep <- df_nextStep[idx,1:2]
   nextStep$times <- steps$times[nrow(steps)] + 1
   
@@ -307,26 +344,41 @@ for(i in 1:pings){
   
 }
 
+steps2 <- data.frame(
+  x = unlist(steps$x),
+  y = unlist(steps$y),
+  times = unlist(steps$times)
+)
+
 # Plot d_lcp and first step
 plot(r_dlcp, col=viridis(1000))
 points(acs, pch = 20, cex = 2, col = "red")
-lines(steps, lwd=2, col = "red")
+lines(steps2, lwd=2, col = "red")
 
-# Plot dlcp surface
+# Plot dlcp surface with tracks
 ggplot(data = df_dlcp, aes(x = x, y = y)) +
   geom_raster(aes(fill = cost)) +
   geom_point(data = as.data.frame(acs), 
              aes(x = X, y = Y), color = "red") +
-  geom_path(data=steps, aes(x=x, y=y), color = "red", lwd=0.2) +
+  geom_path(data=steps2, aes(x=x, y=y), color = "red", lwd=0.2) +
   coord_equal() +
   scale_fill_viridis()
 
 # Checking if we can recover original distribution
-steps %>%
+p2 <- steps2[3:nrow(steps2),] %>% # Get rid of manually-selected first pings to clean up raster
   group_by(x, y) %>%
   summarise(count = n()) %>%
   ggplot(aes(x, y)) +
   geom_raster(aes(fill = count)) +
+  ggtitle("Frequency of per-pixel (n=90x24x10)") +
   scale_fill_viridis() +
   coord_equal()
 
+# Oirignal distribution
+p1 <- ggplot(data = df_dlcp, aes(x = x, y = y)) +
+  geom_raster(aes(fill = cost)) +
+  ggtitle("Cost surface") +
+  coord_equal() +
+  scale_fill_viridis()
+
+p1+p2
