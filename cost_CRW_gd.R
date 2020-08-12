@@ -8,6 +8,7 @@ library(trajr)
 library(circular)
 library(ggplot2)
 library(viridis)
+library(dplyr)
 
 set.seed(202006)
 
@@ -142,8 +143,8 @@ for(i in 1:nrow(df_dlcp)){
   # Calculate angle
   theta[i] <- TrajAngles(trj = trj)
   
-  #theta_probd[i] <- dwrappedcauchy(x = theta[i], mu=circular(0), rho=0.05)
-  theta_probd[i] <- dnorm(x = theta[i], mean = 0, sd = 2.25) # Similar to dnorm
+  theta_probd[i] <- dwrappedcauchy(x = theta[i], mu=circular(0), rho=0.2)
+  #theta_probd[i] <- dnorm(x = theta[i], mean = 0, sd = 0.3) # Similar to dnorm
 }
 
 # Visual check
@@ -203,4 +204,41 @@ lines(steps, lwd=2, col="black")
 
 # Reset plot
 par(mfrow=c(1,1))
+
+
+#----Get next step----
+
+# Multiplicative
+r_nextStep <- rasterFromXYZ(cbind(df_dlcp[,1:2], prob_cost)) * rasterFromXYZ(cbind(df_dlcp[,1:2], theta_probd))
+
+# Plot this to see it
+plot(r_nextStep, col = viridis(1000))
+
+# Make it a df to sample
+df_nextStep <- as.data.frame(r_nextStep, xy=T)
+
+# Sample according to multiplicative probabilities
+idx <- base::sample(x = nrow(df_nextStep), size = 1, prob = df_nextStep[,"layer"], replace=T)
+nextStep <- df_nextStep[idx,1:2]
+
+# Plot the sampled point
+points(nextStep, pch = 20, cex=2, col="red")
+
+# If we do this a ton, can we recover the distribution?
+idx <- base::sample(x = nrow(df_nextStep), size = 500000, prob = df_nextStep[,"layer"], replace=T)
+nextStep <- df_nextStep[idx,1:2]
+
+# Yes, we can!
+nextStep %>%
+  group_by(x, y) %>%
+  summarise(count = n()) %>%
+  ggplot(aes(x, y)) +
+  geom_raster(aes(fill = count)) +
+  scale_fill_viridis() +
+  coord_equal()
+
+
+
+
+
 
