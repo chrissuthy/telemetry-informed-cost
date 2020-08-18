@@ -24,22 +24,22 @@ plot(landscape)
 cost_parameter <- 1.5
 cost_surface <- exp(cost_parameter * landscape^2)
 transistion_surface <- geoCorrection(
-                        transition(cost_surface,
-                                   transitionFunction = function(x) (1/(mean(x))),
-                                   direction = 16),
-                       scl = F)
+  transition(cost_surface,
+             transitionFunction = function(x) (1/(mean(x))),
+             direction = 16),
+  scl = F)
 
 
 # Create state space ------------------------------------------------------
 res <- 0.125
 statespace <- data.frame(
-               expand.grid(
-                X = seq(round(bbox(cost_surface)[1,1])+res/2,
-                        round(bbox(cost_surface)[1,2])-res/2,
-                        res),
-                Y = seq(round(bbox(cost_surface)[2,1])+res/2,
-                        round(bbox(cost_surface)[2,2])-res/2,
-                        res)))
+  expand.grid(
+    X = seq(round(bbox(cost_surface)[1,1])+res/2,
+            round(bbox(cost_surface)[1,2])-res/2,
+            res),
+    Y = seq(round(bbox(cost_surface)[2,1])+res/2,
+            round(bbox(cost_surface)[2,2])-res/2,
+            res)))
 
 
 
@@ -62,8 +62,8 @@ acs <- cbind(X = round(runif(abundance,0,10),2),
 # Creat traps -------------------------------------------------------------
 
 traplocs <- as.matrix(
-             expand.grid(X = seq(5-3*2*sigma,5+3*2*sigma,length=7),
-                         Y = seq(5-3*2*sigma,5+3*2*sigma,length=7)))
+  expand.grid(X = seq(5-3*2*sigma,5+3*2*sigma,length=7),
+              Y = seq(5-3*2*sigma,5+3*2*sigma,length=7)))
 
 
 
@@ -113,13 +113,13 @@ for(i in 1:telemetry_n){
                                     c(tmp_from[1]+view_multiplier*sigma,tmp_from[2]+view_multiplier*sigma), 
                                     c(tmp_from[1]+view_multiplier*sigma,tmp_from[2]-view_multiplier*sigma),
                                     c(tmp_from[1]-view_multiplier*sigma,tmp_from[2]-view_multiplier*sigma)))),Class = "Spatial")
-  
+    
     tmp_rsf_clip <- crop(tmp_rsf,ext)
     tmp_ac <- st_as_sf(x = data.frame(id = 1, 
                                       X = tmp_from[1],
                                       Y = tmp_from[2]),
                        coords = c("X","Y"))
-  
+    
     plot(tmp_rsf_clip, axes=FALSE, legend=FALSE, col = viridis(100,option="A", direction=-1, alpha = 0.5))
     plot(st_geometry(st_buffer(tmp_ac,sqrt(5.99)*sigma)), add=TRUE)
     points(coordinates(cost_surface), cex=sqrt(n_by_cell_freq[i,])/2, pch=16, col=adjustcolor(1,0.2))
@@ -129,6 +129,3 @@ for(i in 1:telemetry_n){
 
 
 # SCR data ----------------------------------------------------------------
-
-
-
