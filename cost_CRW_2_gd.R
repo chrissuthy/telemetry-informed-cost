@@ -84,6 +84,11 @@ p_ss <- cbind(df_cost_surface[,c("x", "y")], p = as.numeric(pmat))
 
 #----Start tracking!----
 
+# Surface parameters
+b_0 <- -1
+b_lcp <- -5
+b_ac <- 5
+
 # Initiate a tag
 steps = data.frame(
   x = acs[1,"X"],
@@ -129,10 +134,7 @@ for(i in 1:n_pings){
   #----Combine LCP + AC----
   
   # Linear transform
-  b_0 <- -1
-  b_lcp <- -5
   X_lcp <- df_dlcp$dlcp
-  b_ac <- 5
   X_ac <- p_ss$p
   
   pi <- exp(b_0 + b_lcp*X_lcp + b_ac*X_ac)/sum(exp(b_0 + b_lcp*X_lcp + b_ac*X_ac))
@@ -189,4 +191,39 @@ p2 <- ggplot(data = ppFreq, aes(x, y)) +
 
 # Together
 p1 + p2
+
+
+#----Thin the telemetry data----
+
+# Get rid of first couple of manually-selected positions
+steps <- steps[steps$times > 2,]
+
+# Calculate thinning rate
+n_fixes <- nrow(steps)
+prop_thin <- 0.2
+n_thin <- n_fixes*prop_thin
+
+# Thin the data
+final_data <- steps[seq(1, nrow(steps), length = n_thin),]
+
+# Plot the thhinned data
+final_data %>% # Get rid of manually-selected first pings to clean up raster
+  group_by(x, y) %>%
+  summarise(count = n()) %>% 
+  ggplot(data = ., aes(x, y)) +
+  geom_tile(aes(fill = count)) +
+  ggtitle("Frequency of per-pixel (n=90x24)") +
+  scale_fill_viridis() +
+  coord_equal() +
+  theme_minimal()
+
+
+
+
+
+
+
+
+
+
 
