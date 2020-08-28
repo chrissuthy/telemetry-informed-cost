@@ -86,8 +86,8 @@ p_ss <- cbind(df_cost_surface[,c("x", "y")], p = as.numeric(pmat))
 
 # Surface parameters
 b_0 <- -1
-b_lcp <- -5
-b_ac <- 5
+b_lcp <- -1
+b_ac <- 1
 
 # Initiate a tag
 steps = data.frame(
@@ -216,13 +216,6 @@ final_data %>% # Get rid of manually-selected first pings to clean up raster
   scale_fill_viridis() +
   coord_equal() +
   theme_minimal()
-
-
-
-
-
-
-
 
 
 
