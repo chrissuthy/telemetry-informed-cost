@@ -64,6 +64,17 @@ statespace <-expand.grid(
           res))
 
 
+#----Create traps----
+
+# Traps
+traplocs <- as.matrix(
+  expand.grid(X = seq(5-3*2*sigma,5+3*2*sigma,length=7),
+              Y = seq(5-3*2*sigma,5+3*2*sigma,length=7)))
+
+# Number of traps
+n_traps <- nrow(traplocs)
+
+
 #----SCR parameters----
 
 # Abundance to density
@@ -74,7 +85,7 @@ abs.density <- abundance / area
 pix.density <- abundance / nrow(statespace)
 
 # Activity centers
-acs <- cbind(X = round(runif(abundance,0,10),2),
+ac <- cbind(X = round(runif(abundance,0,10),2),
              Y = round(runif(abundance,0,10),2))
 
 # Space-use paramter (step length?)
@@ -89,12 +100,12 @@ K <- 5
 
 # Tag some of the individuals
 telemetry_n <- 16
-which_telemetered_acs <- sample(1:nrow(acs), telemetry_n)
-telemetered_acs <- acs[which_telemetered_acs,]
+which_telemetered_acs <- sample(1:nrow(ac), telemetry_n)
+telemetered_acs <- ac[which_telemetered_acs,]
 n_fixes <- 90*24 # Every hour for three month study period
 
 
-# Surface parameters  ############ ARE THESE RIGHT? ################
+# Surface parameters                                                     ############ ARE THESE RIGHT? ################
 b_0 <- -1
 b_lcp <- -5
 b_ac <- 5
@@ -108,7 +119,7 @@ b_ac <- 5
 
 # Cost surface
 df_cost_surface <- as.data.frame(cost_surface, xy=T)
-p0_telem <- 1  ############ I feel like this should be the same as above ################
+p0_telem <- 1                                                  ############ SHOULD THIS BE SAME AS p0? ################
 
 # Data-collection object
 telemetered_tracks <- list()
@@ -232,7 +243,8 @@ p1 <- ggplot() +
   scale_fill_viridis("Cost", option = "D") + ggtitle("Individual track") +
   geom_path(data = telemetered_df, aes(x=x, y=y, color=times, group = id), size=0.2) +
   scale_color_viridis("Step number", option="C") +
-  geom_point(data=steps[1,], aes(x=x, y=y), fill = "black", color="white", pch = 21) +
+  geom_point(data=as.data.frame(telemetered_acs), aes(x=X, y=Y), 
+             fill = "black", color="white", pch = 21) +
   coord_equal() + theme_minimal()
 
 # Per-pixel frequency
@@ -280,5 +292,29 @@ for(i in 1:telemetry_n){
   
 }
 
+
+#----Spatial encounter histories----
+
+# (Cost) distance matrix between ACs and traps
+d <- costDistance(transistion_surface, ac, traplocs)
+
+# Capture probability
+a1 <- 1/(2*sigma^2)
+probcap <- plogis(cost_parameter) * exp(-a1 * d^2)                       ############ IS PLOGIS RIGHT? ################
+
+# Encounter history, data-collection matrix
+Y <- matrix(NA, nrow=abundance, ncol=n_traps)
+
+# Loop through each indvidual
+for(i in 1:nrow(Y)){
+  Y[i,] <- rbinom(n_traps, K, probcap[i,])
+}
+
+# Reduce to only captured individuals
+Y <- Y[apply(Y,1,sum)>0,]
+
+# Summary stats
+nrow(Y) # Sample size n
+sum(apply(Y, 1, sum)) # Captures per individual
 
 
