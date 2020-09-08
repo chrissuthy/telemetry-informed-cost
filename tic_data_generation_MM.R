@@ -1,3 +1,7 @@
+# Gates Dupont
+# Adapted from code by Chris Sutherland
+# August - September 2020
+
 library(oSCR)
 library(gdistance)
 library(NLMR)
@@ -12,10 +16,11 @@ library(dplyr)
 library(patchwork)
 area <- raster::area
 
+
 set.seed(202006)
 
 
-"SIMULATION SETUP"
+"LANDSCAPE"
 
 #----Create the landscape----
 
@@ -28,41 +33,47 @@ gauss_nlm <- nlm_gaussianfield(ncol = 100, nrow = 100, resolution = 1,
 
 # Create state-space raster from landscape (axes are different)
 use_this <- gauss_nlm
-landscape <- rasterFromXYZ(cbind(coordinates(use_this)/10,
-                                 values(use_this)))
+landscape0 <- rasterFromXYZ(cbind(coordinates(use_this)/10,values(use_this)))
+landscape <- landscape0^2
+statespace <- as.data.frame(landscape, xy=T)[,c("x", "y")] 
+statespace <- as.matrix(statespace)
 
 
-#----Create cost surface----
+"SCR"
 
-# Set cost surface parameter
-cost_parameter <- 1.5
+#----SCR parameters----
 
-# Calculate per-pixel cost values (surface)
-cost_surface <- exp(cost_parameter * landscape^2)
+# Abundance to density
+abundance <- 300
+area <- prod(round(apply(bbox(statespace),1,diff),2))
 
-# Create tansition surface
-transistion_surface <- geoCorrection(
-  transition(
-    cost_surface,
-    transitionFunction = function(x) (1/(mean(x))),
-    direction = 16),
-  scl = F)
+abs.density <- abundance / area
+pix.density <- abundance / nrow(statespace)
+
+# Activity centers
+idx <- sample(x = 1:nrow(statespace), size = abundance)
+ac <- statespace[idx,]
+rownames(ac) <- NULL
+
+# Detection
+p0 <- 0.1
+K <- 5
 
 
-#---Create state-space---- (Though I don't really use this?)
+"MOVEMENT MODEL PARAMETERS"
 
-# Set resolution
-res <- 0.125
+#----Movement model parameters----
 
-# Create state-space
-statespace <-expand.grid(
-  X = seq(round(bbox(cost_surface)[1,1])+res/2,
-          round(bbox(cost_surface)[1,2])-res/2,
-          res),
-  Y = seq(round(bbox(cost_surface)[2,1])+res/2,
-          round(bbox(cost_surface)[2,2])-res/2,
-          res))
+# MM parameters
+sigma <- 0.35   # space use - step length
+psi <- 0.7         # This is pr(moved)
+theta <- 1.1       # Space use - home range
+alpha2 <- 1        # Cost value
+n_fixes <- 90*24   # Number of pings
+moved <- rbinom(n_fixes, 1, psi) # Vector of decisions to move
 
+
+"SCR traps"
 
 #----Create traps----
 
@@ -75,167 +86,128 @@ traplocs <- as.matrix(
 n_traps <- nrow(traplocs)
 
 
-#----SCR parameters----
+"COST SURFACE"
 
-# Abundance to density
-abundance <- 300
-area <- prod(round(apply(bbox(cost_surface),1,diff),2))
+#----Cost surface----
 
-abs.density <- abundance / area
-pix.density <- abundance / nrow(statespace)
+# Cost surface
+logcost <- alpha2*landscape
+cost <- exp(logcost)
 
-# Activity centers
-ac <- cbind(X = round(runif(abundance,0,10),2),
-             Y = round(runif(abundance,0,10),2))
+# Create tansition surface
+tr1 <- transition(
+  cost,
+  transitionFunction=function(x) 1/mean(x),
+  directions=16)
 
-# Space-use paramter (step length?)
-sigma <- 0.35
+# Corrected transition surface
+tr1Corr <-geoCorrection(
+  tr1,
+  multpl=FALSE,
+  scl=FALSE)
 
-# Detection
-p0 <- 0.1
-K <- 5
 
+"DATA-GENERATION (telemetry)"
 
-#----Movement model parameters----
+#---Start tracking individuals----
 
 # Tag some of the individuals
 telemetry_n <- 16
 which_telemetered_acs <- sample(1:nrow(ac), telemetry_n)
 telemetered_acs <- ac[which_telemetered_acs,]
-n_fixes <- 90*24 # Every hour for three month study period
 
-
-# Surface parameters                                                     ############ ARE THESE RIGHT? ################
-b_0 <- -1
-b_lcp <- -5
-b_ac <- 5
-
-
-
-"MOVEMENT MODEL"
-
-
-#----Start movement model----
-
-# Cost surface
-df_cost_surface <- as.data.frame(cost_surface, xy=T)
-p0_telem <- 1                                                  ############ SHOULD THIS BE SAME AS p0? ################
-
-# Data-collection object
-telemetered_tracks <- list()
-
-# Loop through each individual ac
-for(i in 1:telemetry_n){
+tracks = list()
+for(j in 1:telemetry_n){
   
-  # Grab individual i
-  acs <- matrix(telemetered_acs[i,],1,2,byrow=T)
-  colnames(acs) <- c("X", "Y")
+  # Get starting position for the individual
+  sbar <- telemetered_acs[j,]
   
-  
-  #----Home range bias----
-  
-  # Same pixels as cost surface
-  dmat <- e2dist(x = acs, y = df_cost_surface[,c("x", "y")] )
-  pmat <- p0_telem * exp(-dmat * dmat/(2 * sigma * sigma))
-  p_ss <- cbind(df_cost_surface[,c("x", "y")], p = as.numeric(pmat))
-  
-  
-  #----Start tracking!----
-  
-  # Initiate a tag
-  steps = data.frame(
-    x = acs[1,"X"],
-    y = acs[1,"Y"],
-    times = 0
-  )
-  
-  # First step into a pixel centroid
-  steps[2,] <- p_ss %>% arrange(desc(p)) %>% slice(1) %>% mutate(p = 1)
+  # Create vector of steps
+  s.grid <- rep(NA, n_fixes)
+  s.grid[1] <- extract(stack(landscape),matrix(sbar,nrow=1), cellnumber=T)[1]
   
   # Set progress bar
-  print(paste("Individual", i, "of", telemetry_n))
-  pb = txtProgressBar(min = 1, max = n_fixes, initial = 1, style=3) 
+  print(paste("Individual", j, "of", telemetry_n))
+  pb = txtProgressBar(min = 2, max = n_fixes, initial = 1, style=3) 
   
-  # Tag 'em and watch 'em run!
-  for(j in 1:n_fixes){
+  # Loop to generate fix locations
+  for(i in 2:n_fixes){
     
-    setTxtProgressBar(pb,j)
+    setTxtProgressBar(pb,i)
     
-    #---Home range bias----
+    # If the animal doesn't move, assign same loc and skip the rest
+    if(moved[i]==0){
+      s.grid[i] <- s.grid[i-1]
+      next # Next mean skip the rest of the for loop
+    }
     
-    # p_ss # Constant
+    # If the animal moved...
     
+    # Calculate ecological distance from the last position to each pixel (for sigma)
+    D <- costDistance(tr1Corr,  statespace[s.grid[i-1],], statespace)
     
-    #----LCP----
+    # Calculate euclidean distance from the activity center to each pixel (for theta)
+    Dac <- sqrt( (statespace[s.grid[1],1] - statespace[,1] )^2  + (statespace[s.grid[1],2] - statespace[,2])^2  )
     
-    # Points for LCP
-    x1y1 <- as.numeric(matrix(steps[nrow(steps),1:2],1,2,byrow=TRUE))
-    x2y2 <- coordinates(cost_surface)
+    # Create a movement kernel using ecoD & sigma and eucDac & theta
+    kern <- exp((-D*D/(2*sigma*sigma))  - (Dac*Dac/(2*theta*theta)) )
     
-    # Calculate LCP per-pixel from AC
-    telem_rsf_dmat <- costDistance(
-      transistion_surface,
-      fromCoords = x1y1,
-      toCoords = x2y2)
+    # Assign the current position a probability of zero (can't stay in the same spot, b/c Psi=1)
+    kern[s.grid[i-1]] <- 0
     
-    # Convert LCP data to data frame
-    df_dlcp <- as.data.frame(cbind(coordinates(cost_surface), dlcp = as.numeric(telem_rsf_dmat)))
+    # Normalize the kernel cell values into probabilities
+    kern <- kern/rowSums(kern)
     
-    
-    #----Combine LCP + AC----
-    
-    # Linear transform
-    X_lcp <- df_dlcp$dlcp
-    X_ac <- p_ss$p
-    
-    pi <- exp(b_0 + b_lcp*X_lcp + b_ac*X_ac)/sum(exp(b_0 + b_lcp*X_lcp + b_ac*X_ac))
-    
-    pi_df <- as.data.frame(cbind(coordinates(cost_surface), pi = pi))
-    
-    
-    #----Sample position t+1----
-    
-    # Sample according to multiplicative probabilities
-    idx <- base::sample(x = nrow(pi_df), size = 1, prob = pi_df[,"pi"])
-    nextStep <- pi_df[idx,1:2]
-    nextStep$times <- steps$times[nrow(steps)] + 1
-    
-    # Append selected step to next step
-    steps <- rbind(steps, nextStep)
-    
-    # Write out track to data-collection object
-    telemetered_tracks[[i]] <- cbind(steps, id = which_telemetered_acs[i])
-    
-    # Plot each iteration
-    # xlim <- c(acs[1,1]-3*sigma, acs[1,1]+3*sigma)
-    # ylim <- c(acs[1,2]-3*sigma, acs[1,2]+3*sigma)
-    # plot(rasterFromXYZ(pi_df), ylim=ylim, xlim=xlim, col = viridis(1000)[350:1000])
-    # points(acs, cex = 1.5, pch = 20, col = "white")
-    # points(acs, cex = 1.2, pch = 20, col = "black")
-    # lines(steps[,c("x","y")], lwd=0.2)
-    # points(steps[nrow(steps),], col = "red", cex = 1.2, pch = 20)
-    
+    # Sample a pixel for the next step using kernel
+    s.grid[i]<- sample( 1:length(kern), 1, prob=kern)
   }
+  
+  
+  #----Organize track----
+  
+  # Compile track from state-space using sampled cellnumbers
+  obs <- statespace[s.grid,]
+  obs <- as.data.frame(obs)
+  
+  # RETURN RESULT
+  tracks[[j]] <- cbind(obs, id = which_telemetered_acs[j])
   
 }
 
+# Combine tracks into a df
+telemetered_df = do.call(rbind, tracks) %>%
+  mutate(times = 1:nrow(.))
 
-#----Thin the telemetry data----
 
-# Prep the telemetry data
-telemetered_df <- do.call(rbind, telemetered_tracks) %>%
-  filter(times > 0) # getting rid of starting manual fixes.
+#----Plot the resulting tracks----s
 
-# Thin the telemetry data
-prop_thin <- 0.25  # percent for thinning
+# Plot of state-space, surface, & track
+ggplot() +
+  geom_tile(data=as.data.frame(cost, xy=T), aes(x=x, y=y, fill = layer)) + 
+  scale_fill_viridis("Cost", option = "D") + ggtitle("Individual track") +
+  geom_path(data = telemetered_df, aes(x=x, y=y, group=id, color=times), size=0.2) +
+  scale_color_viridis("Step number", option="C") +
+  geom_point(data=as.data.frame(telemetered_acs), aes(x=x, y=y), 
+             fill = "black", color="white", pch = 21) +
+  coord_equal() + theme_minimal()
+
+
+#----Thin the data----
+
+# Degree of thinning
+prop_thin <- 1  # percent for thinning
+
+# Do the thinning
 telemetered_thin_df <- telemetered_df %>%
   group_by(id) %>% # for each individual
-  mutate(times = c(1:(max(times)))) %>% # just resetting the times
-  slice(., seq(1, max(times), length = max(times)*prop_thin)) %>% # thin the data (take indicies)
+  slice(., seq(1, nrow(.), length=prop_thin*nrow(.))) %>% # thin the data (take indicies)
   ungroup() # ungroup at the end
 
 
 #----Plot the tracks and the thinned data per-pixel frequencies----
+
+# Cost surface to df
+df_cost_surface <- as.data.frame(landscape, xy=T)
 
 # Raw tracks
 p1 <- ggplot() +
@@ -243,7 +215,7 @@ p1 <- ggplot() +
   scale_fill_viridis("Cost", option = "D") + ggtitle("Individual track") +
   geom_path(data = telemetered_df, aes(x=x, y=y, color=times, group = id), size=0.2) +
   scale_color_viridis("Step number", option="C") +
-  geom_point(data=as.data.frame(telemetered_acs), aes(x=X, y=Y), 
+  geom_point(data=as.data.frame(telemetered_acs), aes(x=x, y=y), 
              fill = "black", color="white", pch = 21) +
   coord_equal() + theme_minimal()
 
@@ -253,8 +225,8 @@ p2 <- telemetered_thin_df %>%
   summarise(count = n()) %>%
   ggplot(data = ., aes(x, y)) +
   geom_tile(aes(fill = count)) +
-  ggtitle("Frequency of per-pixel (n=90x24)") +
-  scale_fill_viridis() +
+  ggtitle("Frequency of fixes per-pixel (n=90x24)") +
+  scale_fill_viridis("Count") +
   coord_equal() +
   theme_minimal()
 
@@ -270,7 +242,7 @@ ppFreq_template <- df_cost_surface %>%
   mutate(count = 0)
 
 # data collection matrix
-n_by_cell_freq <- matrix(NA,nrow=telemetry_n,ncell(cost_surface))
+n_by_cell_freq <- matrix(NA,nrow=telemetry_n,ncell(cost))
 
 # ppfreq for each individual
 for(i in 1:telemetry_n){
@@ -296,13 +268,13 @@ for(i in 1:telemetry_n){
 #----Spatial encounter histories----
 
 # (Cost) distance matrix between ACs and traps
-d <- costDistance(transistion_surface, ac, traplocs)
+d <- costDistance(tr1Corr, ac, traplocs)
 
 # Capture probability
-a1 <- 1/(2*sigma^2)
-probcap <- plogis(cost_parameter) * exp(-a1 * d^2)                       ############ IS PLOGIS RIGHT? ################
+a1 <- 1/(2*sigma^2)                                              ############ SIGMA vs THETA? ################
+probcap <- plogis(alpha2) * exp(-a1 * d^2)                       ############ IS PLOGIS RIGHT? ################
 
-# Encounter history, data-collection matrix
+# Empty encounter data frame, data-collection matrix
 Y <- matrix(NA, nrow=abundance, ncol=n_traps)
 
 # Loop through each indvidual
