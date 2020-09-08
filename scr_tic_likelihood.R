@@ -20,7 +20,7 @@ scr_tic <- function(start,
   
     ## general cost surface items 
     cost_surface <- exp(alpha_cost * landscape)
-    transistion_surface <- geoCorrection(
+    trLayer <- geoCorrection(
                              transition(cost_surface,
                                         transitionFunction = function(x) (1/(mean(x))),
                                         direction = direction),
