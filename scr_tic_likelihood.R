@@ -61,11 +61,11 @@ scr_tic <- function(start,
      for (i in 1:nrow(rsf_y)){
       
        log.probs <- log((1-2*1e-25)*rsf_pmat + 1e-25)
-       lik.marg.tel[i] <- sum( exp(Ytels[i,,drop=F] %*% log.probs) * as.vector(pi.s) )
+       lik.marg.tel[i] <- sum( exp(rsf_y[i,,drop=F] %*% log.probs) * as.vector(pi.s) )
        #if (telemetry.type == "dep"){
        #if (i <= length(cap.tel)){
        # combine conditional likelihoods if some collared ind were captured
-       lik.cond.tot <- (Ytels[i,,drop=F] %*% log.probs) + lik.cond.tel[i,]
+       lik.cond.tot <- (rsf_y[i,,drop=F] %*% log.probs) + lik.cond.tel[i,]
        #lik.cond.tot[trimC[[s]][[cap.tel[i]]]] <- exp(lik.cond.tot[trimC[[s]][[cap.tel[i]]]])
        lik.cond.tot[is.na(lik.cond.tot)] <- 0
        lik.cond.tot[lik.cond.tot != 0] <- exp(lik.cond.tot[lik.cond.tot != 0])
