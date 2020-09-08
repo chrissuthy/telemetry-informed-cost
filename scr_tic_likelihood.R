@@ -55,7 +55,7 @@ scr_tic <- function(start,
     ## RSF likelihood (DAN, you probably want to step in here!)
     if(add_telem){
       rsf_dmat <- costDistance(trLayer, ss_locs, ss_locs)
-      rsf_pmat <- exp(1-telem_rsf_dmat^2/(2*sigma^2))
+      rsf_pmat <- exp(1-rsf_dmat^2/(2*sigma^2))
       rsf_pmat <- rsf_pmat/apply(rsf_pmat,1,sum)
   
      for (i in 1:nrow(rsf_y)){
