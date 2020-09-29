@@ -24,7 +24,7 @@ source("R/gates_new/scr_move_cost_like.R")
 
 # Starting parameters
 abundance   <- 300         # Abundance
-alpha2      <- 1           # Cost value
+alpha2      <- 0           # Cost value
 sigma       <- 0.5         # Space use - home range
 p0          <- 0.2         # Baseline encounter probability
 K           <- 5           # Number of sampling occasions
@@ -96,9 +96,16 @@ for(sim in 1:nsims){
   #---SCR traps---
   
   # Traps - 2 sigma design, 4 sigma from edges (when sigma = 0.5)
+  # traplocs <- as.matrix(
+  #   expand.grid(X = seq(5-3*2*sigma,5+3*2*sigma,length=7),
+  #               Y = seq(5-3*2*sigma,5+3*2*sigma,length=7)))
+  
   traplocs <- as.matrix(
-    expand.grid(X = seq(5-3*2*sigma,5+3*2*sigma,length=7),
-                Y = seq(5-3*2*sigma,5+3*2*sigma,length=7)))
+    expand.grid(
+      X = seq(5-(4.5*1.5*sigma), 5+(4.5*1.5*sigma), by = 1.5*sigma),
+      Y = seq(5-(4.5*1.5*sigma), 5+(4.5*1.5*sigma), by = 1.5*sigma)
+    )
+  )
   
   # Number of traps
   n_traps <- nrow(traplocs)
@@ -368,5 +375,17 @@ rb <- data.frame(
 # Print results
 print(t_total)
 print(rb)
+
+rb %>%
+  tidyr::gather() %>%
+  ggplot(data=., aes(x = key, y = value, group  = key)) +
+  geom_hline(yintercept = 0, size = 1, color = "gray70") +
+  geom_boxplot(aes(color = key), size=0.6) +
+  geom_hline(yintercept = c(-5,5), lty = 2, color = "gray70") +
+  xlab(NULL) + ylab("%RB") + ggtitle("SCR-move-cost | 50 sims") +
+  ggpubr::theme_pubr() +
+  theme(legend.position = "none")
+  
+
 
 
