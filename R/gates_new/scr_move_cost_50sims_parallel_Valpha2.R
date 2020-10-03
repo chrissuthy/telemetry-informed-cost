@@ -23,7 +23,7 @@ area <- raster::area
 source("R/gates_new/scr_move_cost_like.R")
 
 # NUmber of sims per test
-nsim_per_test = 2
+nsim_per_test = 50
 
 # Starting parameters
 abundance   <- 300         # Abundance
@@ -362,6 +362,8 @@ t_total <- tf-t0
 
 "RESULTS"
 
+pal <- wesanderson::wes_palette("Zissou1", 6, type = "continuous")
+
 # Combine
 out[1:ncell(out)] <- matrix(unlist(results), nrow=nsims, byrow=T)
 
@@ -370,13 +372,101 @@ out_test <- out %>%
   mutate(alpha2_true = !! alpha2) %>%
   group_by(alpha2_true)
   
+
+## % Relative bias
+
+# %RB Alpha 2
 out_test %>%
   select(alpha2, true = alpha2_true) %>%
   group_by(true) %>%
   mutate(rb = 100*((alpha2-true)/true)) %>%
   select(true, rb) %>%
-  ggplot(data = ., aes(x = true, group = true, y = rb)) +
-  geom_boxplot()
+  filter(true > 0.5) %>%
+  ggplot(data = ., aes(x = true, group = true, y = rb, fill = as.factor(true))) +
+  geom_hline(yintercept = 0, lty = 1) +
+  geom_boxplot() +
+  scale_fill_manual(values = pal) +
+  geom_hline(yintercept = c(-5,5), lty = 2) +
+  theme_minimal() + ggtitle("Cost estimates | 50 sims") +
+  xlab("alpha2") + ylab("%RB hat_alpha2") +
+  theme(legend.position = "none")
+
+# %RB d0
+out_test %>%
+  mutate(d0_true = !! d0) %>%
+  select(d0, d0_true, alpha2_true) %>%
+  group_by(alpha2_true) %>%
+  mutate(rb = 100*((d0-d0_true)/d0_true)) %>%
+  select(true = alpha2_true, rb) %>%
+  filter(true > 0.5) %>%
+  ggplot(data = ., aes(x = true, group = true, y = rb, fill = as.factor(true))) +
+  geom_hline(yintercept = 0, lty = 1) +
+  geom_boxplot() +
+  scale_fill_manual(values = pal) +
+  geom_hline(yintercept = c(-5,5), lty = 2) +
+  theme_minimal() + ggtitle("Density estimates | 50 sims") +
+  xlab("alpha2") + ylab("%RB hat_d0") +
+  theme(legend.position = "none")
+
+# Absolute range in alpha2
+out_test %>%
+  select(alpha2, true = alpha2_true) %>%
+  ggplot(data = ., aes(x = true, y = alpha2, color = as.factor(true))) +
+  geom_point() +   scale_color_manual(values = pal) +
+  theme_minimal() + ggtitle("Varying alpha2") +
+  xlab("alpha2") + ylab("hat_alpha2") +
+  theme(legend.position = "none")
+
+# Show absolute range
+out_test %>%
+  select(alpha2, true = alpha2_true) %>%
+  group_by(true) %>%
+  summarise(range = diff(range(alpha2))) %>%
+  ggplot(data = ., aes(x = true, y = range, color = as.factor(true))) +
+  geom_point(size = 2) + theme_minimal() + theme(legend.position = "none") +
+  scale_color_manual(values = pal) + ylim(0,0.5)
   
+  
+
+## % Bias
+
+# %B Alpha 2
+out_test %>%
+  select(alpha2, true = alpha2_true) %>%
+  group_by(true) %>%
+  mutate(rb = 100*((alpha2-true))) %>%
+  select(true, rb) %>%
+  #filter(true > 0.5) %>%
+  ggplot(data = ., aes(x = true, group = true, y = rb, fill = as.factor(true))) +
+  geom_hline(yintercept = 0, lty = 1) +
+  geom_boxplot() +
+  scale_fill_manual(values = pal) +
+  geom_hline(yintercept = c(-5,5), lty = 2) +
+  theme_minimal() + ggtitle("Cost estimates | 50 sims") +
+  xlab("alpha2") + ylab("%Bias hat_alpha2") +
+  theme(legend.position = "none")
+
+
+# %B d0
+out_test %>%
+  mutate(d0_true = !! d0) %>%
+  select(d0, d0_true, alpha2_true) %>%
+  group_by(alpha2_true) %>%
+  mutate(rb = 100*((d0-d0_true))) %>%
+  select(true = alpha2_true, rb) %>%
+  #filter(true > 0.5) %>%
+  ggplot(data = ., aes(x = true, group = true, y = rb, fill = as.factor(true))) +
+  geom_hline(yintercept = 0, lty = 1) +
+  geom_boxplot() +
+  scale_fill_manual(values = pal) +
+  geom_hline(yintercept = c(-5,5), lty = 2) +
+  theme_minimal() + ggtitle("Density estimates | 50 sims") +
+  xlab("alpha2") + ylab("%Bias hat_d0") +
+  theme(legend.position = "none")
+
+
+
+
+
 
 
