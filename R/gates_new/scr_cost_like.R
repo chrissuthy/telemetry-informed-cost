@@ -12,10 +12,8 @@ scr_cost_like <- function(
   #d0: population density
   
   #if(is.null(prj)) stop("Must provide a projection")
-  
-  nguys <- length(teldata)
-  ll <- rep(NULL,nguys)
-  np <- ncol(spatdata[[1]])-2
+
+  np <- 1
   
   # Old param tracking stuff
   {
@@ -63,7 +61,7 @@ scr_cost_like <- function(
     
   }
   
-  alpha2 <- matrix(param[1], nrow = nguys, ncol = np, byrow = TRUE) # need to fix this for SCR
+  alpha2 <- matrix(param[1], nrow = 1, ncol = np, byrow = TRUE) # need to fix this for SCR
   sigma <- exp(param[2])
   
   ################################################## S C R ##################################################
