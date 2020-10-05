@@ -1,0 +1,446 @@
+---
+title: Update - Integrating telemetry in SCR to improve estimation of the cost function
+author: |
+  | **Gates Dupont**
+  | University of Massachusetts - Amherst
+  | \texttt{gdupont@umass.edu}
+  | 10/04/2020
+
+
+header-includes:
+   - \setbeamercolor{background canvas}{bg=white}
+   - \setbeamertemplate{itemize item}{\small$\bullet$}
+   - \setbeamertemplate{itemize subitem}{\tiny$\Box$}
+   - \setbeamertemplate{itemize subsubitem}{\tiny$\blacktriangleright$}
+   - \setbeamercolor{itemize item}{fg=mDarkTeal}   
+   - \setbeamercolor{itemize subitem}{fg=mLightBrown}   
+   - \setbeamercolor{itemize subsubitem}{fg=mDarkTeal}   
+   - \usepackage{color}
+   - \usepackage{verbatim}
+   - \usepackage{tikz}
+   - \usetikzlibrary{matrix,backgrounds,positioning}
+   - \usetikzlibrary{calc}
+   - \usepackage{tabto}
+   - \usepackage{amsmath}
+   
+fontsize: 10pt
+output:
+ beamer_presentation:
+    highlight: "default"
+    theme: "metropolis"
+    incremental: false
+classoption: t
+urlcolor: teal
+keep_tex: false
+---
+
+```{r global_options, include = FALSE}
+rm(list=ls())
+library(knitr)
+library(oSCR)
+library(dplyr)
+library(ggplot2)
+library(raster)
+library(RColorBrewer)
+library(patchwork)
+library(latex2exp)
+library(viridis)
+select = dplyr::select
+
+opts_chunk$set(eval = FALSE, prompt = FALSE, comment = NA, 
+               warning=FALSE, message=FALSE, 
+               mysize=FALSE, size="\\scriptsize")
+
+hook1 <- function(x){ gsub("```\n*```r*\n*", "", x) }
+hook2 <- function(x){ gsub("```\n+```\n", "", x) }
+knit_hooks$set(document = hook2)
+knitr::knit_hooks$set(mysize = function(before, options, envir){
+ if(before)
+   return(options$size)
+})
+```
+
+```{r load_data, echo = FALSE, eval=TRUE, include = FALSE}
+
+#----Setup----
+
+# Density
+density <- 300/6400
+
+# Tests
+true_alpha2 <- rep(c(0.1, 1:5), each = 50)
+
+
+#----Load sim data----
+
+# Load SCR(-T)
+attach('Valpha2_scrNOtelem_10032020.RData')
+out_scr <- out %>%
+  as.data.frame() %>%
+  mutate(true = true_alpha2) %>%
+  mutate(model = "scr-telem")
+detach('file:Valpha2_scrNOtelem_10032020.RData')
+
+# Load SCR(+T)
+attach('Valpha2_test1_10012020.RData')
+out_scrT <- out %>%
+  as.data.frame() %>%
+  mutate(true = true_alpha2) %>%
+  mutate(model = "scr+telem")
+detach('file:Valpha2_test1_10012020.RData')
+
+
+#----Combine----
+
+# Select common and combine
+out <- rbind(
+  out_scr %>%
+    select(alpha2, d0, true, model),
+  out_scrT %>%
+    select(alpha2, d0, true, model)
+)
+
+
+#----Relative bias----
+
+bias_df <- out %>% 
+  group_by(true, model) %>%
+  mutate(
+    b_cost = 100*(alpha2 - true),
+    b_density = 100*(d0 - density),
+    rb_cost = 100*((alpha2 - true)/true),
+    rb_density = 100*((d0 - density)/density))
+```
+
+# Background
+
+## Model structure
+
+__Integrated likelihood framework__
+
+- Single model, composed of SCR and movement submodels
+- Submodels share 2 params:
+  - $\alpha_2$ - Cost parameter
+  - $\sigma$ - Distance from home range center
+
+- Leverages SCR data and telemetry data
+
+## Submodels
+
+__The SCR model__
+
+- Basic SCR model (w/ Gaussian encounter probability model)
+- Modified to estimate cost (Royle \textit{et al.} 2013)
+
+__The movement model__ (Sutherland \textit{et al.} 2018 TWS presentation)
+
+- Basic model of Markovian movement
+  - Step length determined by LCP (ecological) distance 
+  - Includes distance from activity center for SCR-like data
+  - So, four params:
+  
+
+\footnotesize
+|   Parameter     |          Description         |
+|:---------------:|:----------------------------:|
+| $\alpha_2$      | Cost value                   |
+| $\sigma$        | Space use - home range       |
+| $\upsilon$      | Space use - step length      |
+| $\psi$          | pr(Moved)                    |
+\normalsize
+
+
+# $SCR_{cost}$  (base, no telem)
+
+## Scenario settings
+
+
+SCR DATA
+
+\footnotesize
+| Parameter |   Value   |           Description          |
+|-----------|:---------:|:------------------------------:|
+| abundance |    300    | Abundance                      |
+| alpha2    | 1,2,3,4,5 | Cost value                     |
+| sigma     |    0.5    | Space use - home range         |
+| p0        |    0.2    | Baseline encounter probability |
+| K         |     5     | Number of sampling occasions   |
+\normalsize
+
+STATE-SPACE
+
+\footnotesize
+| Parameter     |          Value          |          Description          |
+|---------------|:-----------------------:|:-----------------------------:|
+| rr            |         sigma/4         | State-space & cost resolution |
+| lncol = lnrow |          10/rr          | State-space dimensions        |
+| d0            | abundance/(lncol*lnrow) | Per-pixel density             |
+\normalsize 
+
+50 simulations per cost value
+
+
+
+## Cost estimation
+
+```{r scr_plot_cost, eval=TRUE, echo=FALSE}
+pdf.options(encoding='CP1253.enc')
+
+# Color palettes
+blue = brewer.pal(n = 9, name = "Blues")
+red = brewer.pal(n = 9, name = "Reds")
+pal1 = c(red[5:9])
+pal2 = c(red[4:8])
+
+# % Bias cost
+bias_df %>%
+  filter(true != 0.1) %>%
+  filter(model == "scr-telem") %>%
+  ggplot(data = ., aes(x = as.factor(true), 
+                       y = b_cost,
+                       color = as.factor(true),
+                       fill = as.factor(true),
+                       group = as.factor(true))) +
+  geom_rect(ymin = -5, ymax = 5, xmin = 0.1, xmax = 6, 
+            fill = "gray70", color = "gray70") +
+  geom_hline(yintercept = 0, size = 0.7) +
+  geom_boxplot(lwd = 1.2) +
+  scale_fill_manual(TeX("$\\alpha_2$"), values = pal2) +
+  scale_color_manual(TeX("$\\alpha_2$"), values = pal1) +
+  theme_minimal() + ylim(-320, 320) +
+  labs(x = TeX("$\\alpha_2$"), 
+       y = TeX("$\\hat{\\alpha_2}$")) +
+  theme(aspect.ratio = 1, legend.position = "none",
+        title = element_text(size = 25),
+        text = element_text(size = 20))
+
+```
+
+## Density estimation
+
+```{r scr_plot_density, eval=TRUE, echo=FALSE}
+
+# Color palettes
+blue = brewer.pal(n = 9, name = "Blues")
+red = brewer.pal(n = 9, name = "Reds")
+pal1 = c(red[5:9])
+pal2 = c(red[4:8])
+
+# % Bias cost
+bias_df %>%
+  filter(true != 0.1) %>%
+  filter(model == "scr-telem") %>%
+  ggplot(data = ., aes(x = as.factor(true), 
+                       y = b_density,
+                       color = as.factor(true),
+                       fill = as.factor(true),
+                       group = as.factor(true))) +
+  geom_rect(ymin = -5, ymax = 5, xmin = 0.1, xmax = 6, 
+            fill = "gray85", color = "gray85") +
+  geom_hline(yintercept = 0, size = 0.7) +
+  geom_boxplot(lwd = 1.2) +
+  scale_fill_manual(TeX("$\\alpha_2$"), values = pal2) +
+  scale_color_manual(TeX("$\\alpha_2$"), values = pal1) +
+  theme_minimal() + ylim(-10, 10) +
+  labs(x = TeX("$\\alpha_2$"), 
+       y = expression(paste("% Bias in ", hat("d"[0])))) +
+  theme(aspect.ratio = 1, legend.position = "none",
+        title = element_text(size = 25),
+        text = element_text(size = 20))
+
+```
+
+# $SCR_{cost}$ + telem
+
+## Scenario settings
+
+SCR DATA:
+
+- Same as above
+
+
+STATE-SPACE:
+
+- Same as above
+  
+  
+MOVEMENT DATA:
+
+\footnotesize
+| Parameter   |  Value  |          Description         |
+|-------------|:-------:|:----------------------------:|
+| upsilon     | sigma/4 | Space use - step length      |
+| psi         |   0.7   | pr(Moved)                    |
+| nfix        |  90*24  | Number of pings              |
+| telemetry_n | 8       | Number of individuals tagged |
+\normalsize
+
+50 simulations per cost value
+
+
+## Simulating movement data
+
+```{r move_data, eval = TRUE, echo = FALSE}
+
+attach('Valpha2_test1_10012020.RData')
+teldata <- teldata_raw_ALL[[152]] %>%
+  do.call(rbind, .) %>%
+  mutate(id = rep(1:8, each = 90*24))
+landscape <- landscape_ALL[[152]]
+detach('file:Valpha2_test1_10012020.RData')
+
+acs <- teldata %>%
+  group_by(id) %>%
+  slice(1) %>%
+  as.data.frame()
+  
+ggplot() +
+  geom_tile(data=as.data.frame(landscape, xy=T), aes(x=x, y=y, fill = layer)) +
+  scale_fill_gradientn("Cost", colors = c("white", "orange3")) +
+  geom_path(data = teldata, aes(x=x, y=y, group=id, color = as.factor(id)), size=0.42) +
+  scale_color_manual(values = rep(brewer.pal(n = 9, name = "Blues")[6:9], 2), guide=F) +
+  labs(color = NULL) +
+  geom_point(data=acs, aes(x=x, y=y),
+             fill = "black", color="white", pch = 21) +
+  coord_equal() + theme_minimal() +
+  theme(text = element_text(size=20))
+
+```
+
+
+## Cost estimation
+
+```{r scr_telem_plot_cost, eval=TRUE, echo=FALSE}
+
+# Color palettes
+blue = brewer.pal(n = 9, name = "Blues")
+red = brewer.pal(n = 9, name = "Reds")
+pal1 = c(blue[5:9])
+pal2 = c(blue[4:8])
+
+# % Bias cost
+bias_df %>%
+  filter(true != 0.1) %>%
+  filter(model == "scr+telem") %>%
+  ggplot(data = ., aes(x = as.factor(true), 
+                       y = b_cost,
+                       color = as.factor(true),
+                       fill = as.factor(true),
+                       group = as.factor(true))) +
+  geom_rect(ymin = -5, ymax = 5, xmin = 0.1, xmax = 6, 
+            fill = "gray85", color = "gray85") +
+  geom_hline(yintercept = 0, size = 0.7) +
+  geom_boxplot(lwd = 1.2) +
+  scale_fill_manual(TeX("$\\alpha_2$"), values = pal2) +
+  scale_color_manual(TeX("$\\alpha_2$"), values = pal1) +
+  theme_minimal() + ylim(-25, 25) +
+  labs(x = TeX("$\\alpha_2$"), 
+       y = TeX("% Bias in  $\\hat{\\alpha_2}$")) +
+  theme(aspect.ratio = 1, legend.position = "none",
+        title = element_text(size = 25),
+        text = element_text(size = 20))
+
+```
+
+## Density estimation
+
+```{r scr_telem_plot_density, eval=TRUE, echo=FALSE}
+
+# Color palettes
+blue = brewer.pal(n = 9, name = "Blues")
+red = brewer.pal(n = 9, name = "Reds")
+pal1 = c(blue[5:9])
+pal2 = c(blue[4:8])
+
+# % Bias cost
+bias_df %>%
+  filter(true != 0.1) %>%
+  filter(model == "scr+telem") %>%
+  ggplot(data = ., aes(x = as.factor(true), 
+                       y = b_density,
+                       color = as.factor(true),
+                       fill = as.factor(true),
+                       group = as.factor(true))) +
+  geom_rect(ymin = -5, ymax = 5, xmin = 0.1, xmax = 6, 
+            fill = "gray85", color = "gray85") +
+  geom_hline(yintercept = 0, size = 0.7) +
+  geom_boxplot(lwd = 1.2) +
+  scale_fill_manual(TeX("$\\alpha_2$"), values = pal2) +
+  scale_color_manual(TeX("$\\alpha_2$"), values = pal1) +
+  theme_minimal() + ylim(-10, 10) +
+  labs(x = TeX("$\\alpha_2$"), 
+       y = expression(paste("% Bias in ", hat("d"[0])))) +
+  theme(aspect.ratio = 1, legend.position = "none",
+        title = element_text(size = 25),
+        text = element_text(size = 20))
+
+```
+
+# Comparisons
+
+## Compare cost
+
+```{r plot_compare_cost, eval=TRUE, echo=FALSE}
+
+# Color palettes
+blue = brewer.pal(n = 9, name = "Blues")
+red = brewer.pal(n = 9, name = "Reds")
+pal1 = c(red[5:9], blue[5:9])
+pal2 = c(red[4:8], blue[4:8])
+
+# % Bias cost
+bias_df %>%
+  filter(true != 0.1) %>%
+  ggplot(data = ., aes(x = as.factor(true), y = b_cost,
+                       color = interaction(true, model, sep = ", "),
+                       fill = interaction(true, model, sep = ", "),
+                       group = interaction(true, model, sep = ", "))) +
+  geom_rect(ymin = -5, ymax = 5, xmin = 0, xmax = 10, 
+            fill = "gray70", color = "gray70") +
+  geom_hline(yintercept = 0, size = 0.7) +
+  geom_boxplot(lwd = 1.2) +
+  scale_fill_manual(TeX("$\\alpha_2$, model"), values = pal2) +
+  scale_color_manual(TeX("$\\alpha_2$, model"), values = pal1) +
+  theme_minimal() +
+  labs(x = TeX("$\\alpha_2$"), 
+       y = TeX("% Bias in  $\\hat{\\alpha_2}$")) +
+  theme(aspect.ratio = 1, legend.position = "none",
+        title = element_text(size = 25),
+        text = element_text(size = 20))
+
+```
+
+## Compare density
+
+```{r plot_compare_density, eval=TRUE, echo=FALSE}
+
+# Color palettes
+blue = brewer.pal(n = 9, name = "Blues")
+red = brewer.pal(n = 9, name = "Reds")
+pal1 = c(red[5:9], blue[5:9])
+pal2 = c(red[4:8], blue[4:8])
+
+# % Bias cost
+bias_df %>%
+  filter(true != 0.1) %>%
+  ggplot(data = ., aes(x = as.factor(true), y = b_density,
+                       color = interaction(true, model, sep = ", "),
+                       fill = interaction(true, model, sep = ", "),
+                       group = interaction(true, model, sep = ", "))) +
+  geom_rect(ymin = -5, ymax = 5, xmin = 0, xmax = 10, 
+            fill = "gray85", color = "gray85") +
+  geom_hline(yintercept = 0, size = 0.7) +
+  geom_boxplot(lwd = 1.2) +
+  scale_fill_manual(TeX("$\\alpha_2$, model"), values = pal2) +
+  scale_color_manual(TeX("$\\alpha_2$, model"), values = pal1) +
+  theme_minimal() + ylim(-8, 8) +
+  labs(x = TeX("$\\alpha_2$"), 
+       y = expression(paste("% Bias in ", hat("d"[0])))) +
+  theme(aspect.ratio = 1, legend.position = "none",
+        title = element_text(size = 25),
+        text = element_text(size = 20))
+
+```
+
+
+
