@@ -13,21 +13,22 @@ library(ggplot2)
 library(viridis)
 library(dplyr)
 library(doParallel)
-#library(patchwork)
+library(patchwork)
 area <- raster::area
 
 
 "PARAMETERS"
 
 # Likelihood function
+source("R/gates_new/scr_cost_like.R")
 source("R/gates_new/scr_move_cost_like.R")
 
-# NUmber of sims per test
-nsim_per_test = 50
+# Number of sims per test
+nsim_per_test = 100
 
 # Starting parameters
 abundance   <- 300         # Abundance
-alpha2      <- rep(c(0.1, 1, 2, 3, 4, 5), each = nsim_per_test)           # Cost value
+alpha2      <- rep(c(0, 1, 2, 3, 4, 5), each = nsim_per_test)           # Cost value
 sigma       <- 0.5         # Space use - home range
 p0          <- 0.2         # Baseline encounter probability
 K           <- 5           # Number of sampling occasions
@@ -264,7 +265,7 @@ for(sim in 1:nsims){
     ungroup()
   
   
-  #----Plot the resulting tracks----s
+  #----Plot the resulting tracks----
   
   # Plot of state-space, surface, & track
   # ggplot() +
@@ -315,8 +316,12 @@ for(sim in 1:nsims){
 
 "PART 2: FIT MODEL TO SIMULATIONS"
 
+# Number of mdoel fits
+nfits <- nsims*2 # fit all with scr, then with movement
+model = rep(c("scr-telem", "scr+telem"), each = nsims)
+
 # Parallel setup
-ncores = detectCores()-2 # Number of available cores -1 to leave for computer
+ncores = detectCores()-1 # Number of available cores -1 to leave for computer
 cl = makeCluster(ncores) # Make the cluster with that many cores
 registerDoParallel(cl)  
 
@@ -324,33 +329,80 @@ registerDoParallel(cl)
 parallel_out <- list()
 
 # Data-collection matrix
-out <- matrix(NA, nrow = nsims, ncol = 6)
-colnames(out) <- c("alpha2", "upsilon", "psi", "sigma", "p0", "d0")
+out <- matrix(NA, nrow = nfits, ncol = 6)
+colnames(out) <- c("alpha2", "sigma", "p0", "d0", "upsilon", "psi")
+
+# End time vector
+end_time <- c()
 
 # Cluster!
 t0 <- Sys.time()
-results <- foreach(sim=1:nsims, .packages = c(.packages())) %dopar% {
+results <- foreach(sim=1:nfits, .packages = c(.packages())) %dopar% {
   
-  # NLM likelihood evaluation
-  mm <- nlm(scr_move_cost_like, mod = "gauss",
-            c(0, 0, 0, 0, 0, 0), hessian = T,
-            teldata = teldata_raw_ALL[[sim]], 
-            spatdata = cost.data_ALL[[sim]],
-            landscape = landscape_ALL[[sim]],
-            K = K, scr_y = Y_ALL[[sim]], trap_locs = traplocs,
-            dist = "lcp", popcost=T, popmove=T, fixcost=F, use.sbar=T, prj=NULL)
+  # Account for doublee-loop through
+  sim_c = ifelse(sim>nsims, sim-nsims, sim)
   
-  # Back-transform estimates
-  est <- mm$estimate
+  "MODELS"
   
-  # Back transform estimates
-  final <- c()
-  final[1] <- est[1]          # alpha2
-  final[2] <- exp(est[2])     # upsilon
-  final[3] <- plogis(est[3])  # psi
-  final[4] <- exp(est[4])     # sigma
-  final[5] <- plogis(est[5])  # p0
-  final[6] <- exp(est[6])     # d0
+  if(model[sim] == "scr-telem"){
+    
+    "SCR-TELEM"
+    
+    # NLM likelihood evaluation
+    mm <- nlm(scr_cost_like, mod = "gauss",
+              c(0, 0, 0, 0), hessian = T,
+              landscape = landscape_ALL[[sim_c]],
+              K = K, scr_y = Y_ALL[[sim_c]], trap_locs = traplocs,
+              dist = "lcp", prj=NULL)
+    
+    # Back-transform estimates
+    est <- mm$estimate
+    
+    # Back transform estimates
+    final <- rep(NA, ncol(out))
+    final[1] <- est[1]          # alpha2
+    final[2] <- exp(est[2])     # sigma
+    final[3] <- plogis(est[3])  # p0
+    final[4] <- exp(est[4])     # d0
+    
+    file <- paste0("C:/Users/dupon/Desktop/sims_10052020/scr_sim", sim, ".txt")
+    if(TRUE) write.table(final, file)
+    
+  }else if(model[sim] == "scr+telem"){
+    
+    "SCR+TELEM"
+    
+    # NLM likelihood evaluation
+    mm <- nlm(scr_move_cost_like, mod = "gauss",
+              c(0, 0, 0, 0, 0, 0), hessian = T,
+              teldata = teldata_raw_ALL[[sim_c]], 
+              spatdata = cost.data_ALL[[sim_c]],
+              landscape = landscape_ALL[[sim_c]],
+              K = K, scr_y = Y_ALL[[sim_c]], trap_locs = traplocs,
+              dist = "lcp", popcost=T, popmove=T, fixcost=F, use.sbar=T, prj=NULL)
+    
+    # Back-transform estimates
+    est <- mm$estimate
+    
+    # Back transform estimates
+    final <- rep(NA, ncol(out))
+    final[1] <- est[1]          # alpha2
+    final[2] <- exp(est[4])     # sigma
+    final[3] <- plogis(est[5])  # p0
+    final[4] <- exp(est[6])     # d0
+    final[5] <- exp(est[2])     # upsilon
+    final[6] <- plogis(est[3])  # psi
+    
+    file <- paste0("C:/Users/dupon/Desktop/sims_10052020/scr_move_sim", sim, ".txt")
+    if(TRUE) write.table(final, file)
+    
+  }
+  
+  # Time est
+  est_t_total <- ((Sys.time()-t0)/sim)*nfits
+  end_time[sim] <- t0 + est_t_total
+  file <- paste0("C:/Users/dupon/Desktop/sims_10052020/stopwatch.txt")
+  if(TRUE) write.table(end_time, file)
   
   # Output
   final
@@ -362,111 +414,9 @@ t_total <- tf-t0
 
 "RESULTS"
 
-pal <- wesanderson::wes_palette("Zissou1", 6, type = "continuous")
+pal <- wesanderson::wes_palette("Zissou1", 5, type = "continuous")
 
 # Combine
-out[1:ncell(out)] <- matrix(unlist(results), nrow=nsims, byrow=T)
-
-out_test <- out %>%
-  as.data.frame() %>%
-  mutate(alpha2_true = !! alpha2) %>%
-  group_by(alpha2_true)
-  
-
-## % Relative bias
-
-# %RB Alpha 2
-out_test %>%
-  select(alpha2, true = alpha2_true) %>%
-  group_by(true) %>%
-  mutate(rb = 100*((alpha2-true)/true)) %>%
-  select(true, rb) %>%
-  filter(true > 0.5) %>%
-  ggplot(data = ., aes(x = true, group = true, y = rb, fill = as.factor(true))) +
-  geom_hline(yintercept = 0, lty = 1) +
-  geom_boxplot() +
-  scale_fill_manual(values = pal) +
-  geom_hline(yintercept = c(-5,5), lty = 2) +
-  theme_minimal() + ggtitle("Cost estimates | 50 sims") +
-  xlab("alpha2") + ylab("%RB hat_alpha2") +
-  theme(legend.position = "none")
-
-# %RB d0
-out_test %>%
-  mutate(d0_true = !! d0) %>%
-  select(d0, d0_true, alpha2_true) %>%
-  group_by(alpha2_true) %>%
-  mutate(rb = 100*((d0-d0_true)/d0_true)) %>%
-  select(true = alpha2_true, rb) %>%
-  filter(true > 0.5) %>%
-  ggplot(data = ., aes(x = true, group = true, y = rb, fill = as.factor(true))) +
-  geom_hline(yintercept = 0, lty = 1) +
-  geom_boxplot() +
-  scale_fill_manual(values = pal) +
-  geom_hline(yintercept = c(-5,5), lty = 2) +
-  theme_minimal() + ggtitle("Density estimates | 50 sims") +
-  xlab("alpha2") + ylab("%RB hat_d0") +
-  theme(legend.position = "none")
-
-# Absolute range in alpha2
-out_test %>%
-  select(alpha2, true = alpha2_true) %>%
-  ggplot(data = ., aes(x = true, y = alpha2, color = as.factor(true))) +
-  geom_point() +   scale_color_manual(values = pal) +
-  theme_minimal() + ggtitle("Varying alpha2") +
-  xlab("alpha2") + ylab("hat_alpha2") +
-  theme(legend.position = "none")
-
-# Show absolute range
-out_test %>%
-  select(alpha2, true = alpha2_true) %>%
-  group_by(true) %>%
-  summarise(range = diff(range(alpha2))) %>%
-  ggplot(data = ., aes(x = true, y = range, color = as.factor(true))) +
-  geom_point(size = 2) + theme_minimal() + theme(legend.position = "none") +
-  scale_color_manual(values = pal) + ylim(0,0.5)
-  
-  
-
-## % Bias
-
-# %B Alpha 2
-out_test %>%
-  select(alpha2, true = alpha2_true) %>%
-  group_by(true) %>%
-  mutate(rb = 100*((alpha2-true))) %>%
-  select(true, rb) %>%
-  #filter(true > 0.5) %>%
-  ggplot(data = ., aes(x = true, group = true, y = rb, fill = as.factor(true))) +
-  geom_hline(yintercept = 0, lty = 1) +
-  geom_boxplot() +
-  scale_fill_manual(values = pal) +
-  geom_hline(yintercept = c(-5,5), lty = 2) +
-  theme_minimal() + ggtitle("Cost estimates | 50 sims") +
-  xlab("alpha2") + ylab("%Bias hat_alpha2") +
-  theme(legend.position = "none")
-
-
-# %B d0
-out_test %>%
-  mutate(d0_true = !! d0) %>%
-  select(d0, d0_true, alpha2_true) %>%
-  group_by(alpha2_true) %>%
-  mutate(rb = 100*((d0-d0_true))) %>%
-  select(true = alpha2_true, rb) %>%
-  #filter(true > 0.5) %>%
-  ggplot(data = ., aes(x = true, group = true, y = rb, fill = as.factor(true))) +
-  geom_hline(yintercept = 0, lty = 1) +
-  geom_boxplot() +
-  scale_fill_manual(values = pal) +
-  geom_hline(yintercept = c(-5,5), lty = 2) +
-  theme_minimal() + ggtitle("Density estimates | 50 sims") +
-  xlab("alpha2") + ylab("%Bias hat_d0") +
-  theme(legend.position = "none")
-
-
-
-
-
+out[1:ncell(out)] <- matrix(unlist(results), nrow=nfits, byrow=T)
 
 
