@@ -1,5 +1,7 @@
 ---
-title: Update - Integrating telemetry in SCR to improve estimation of the cost function
+title: |
+  | UPDATE:
+  | Integrating telemetry data into SCR for improved inference about cost functions
 author: |
   | **Gates Dupont**
   | University of Massachusetts - Amherst
@@ -125,6 +127,8 @@ __Integrated likelihood framework__
 
 - Leverages SCR data and telemetry data
 
+*(Note: I chose this approach over the RSF approach because I could understand it, and because incorporating a movement model is a better fit for the special feature as per Brett's original emails.)*
+
 ## Submodels
 
 __The SCR model__
@@ -149,6 +153,7 @@ __The movement model__ (Sutherland \textit{et al.} 2018 TWS presentation)
 | $\psi$          | pr(Moved)                    |
 \normalsize
 
+# Preliminary results
 
 # $SCR_{cost}$  (base, no telem)
 
@@ -177,7 +182,7 @@ STATE-SPACE
 | d0            | abundance/(lncol*lnrow) | Per-pixel density             |
 \normalsize 
 
-50 simulations per cost value
+*Only* __50__ simulations per cost value
 
 
 
@@ -209,7 +214,7 @@ bias_df %>%
   scale_color_manual(TeX("$\\alpha_2$"), values = pal1) +
   theme_minimal() + ylim(-320, 320) +
   labs(x = TeX("$\\alpha_2$"), 
-       y = TeX("$\\hat{\\alpha_2}$")) +
+       y = TeX("% Bias in  $\\hat{\\alpha_2}$")) +
   theme(aspect.ratio = 1, legend.position = "none",
         title = element_text(size = 25),
         text = element_text(size = 20))
@@ -275,7 +280,7 @@ MOVEMENT DATA:
 | telemetry_n | 8       | Number of individuals tagged |
 \normalsize
 
-50 simulations per cost value
+*Only* __50__ simulations per cost value
 
 
 ## Simulating movement data
@@ -442,5 +447,14 @@ bias_df %>%
 
 ```
 
+
+## Closing remarks
+
+\large
+- These (preliminary) results are very promising.
+- Next steps:
+  - decide/finalize sim scenarios.
+  - run scenarios for >50 sims.
+- Introduction is written. Structure of rest of paper is bulleted.
 
 

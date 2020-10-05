@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2020.10.4)  4 OCT 2020 22:50
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2020.10.4)  4 OCT 2020 23:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -937,7 +937,7 @@ File: microtype.cfg 2019/11/18 v2.7d microtype main configuration file (RS)
 )) (/Users/gatesdupont/Library/TinyTeX/texmf-dist/tex/latex/parskip/parskip.sty
 Package: parskip 2020-06-15 v2.0f non-zero parskip adjustments
 )
-Package hyperref Info: Option `colorlinks' set `true' on input line 87.
+Package hyperref Info: Option `colorlinks' set `true' on input line 86.
 (/Users/gatesdupont/Library/TinyTeX/texmf-dist/tex/latex/tools/longtable.sty
 Package: longtable 2020/01/07 v4.13 Multi-page Table package (DPC)
 \LTleft=\skip76
@@ -1288,147 +1288,151 @@ LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <5> not available
 
 ]
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <9> on input line 166.
+(Font)              <9> on input line 170.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 166.
+(Font)              <6> on input line 170.
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <9> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 166.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 170.
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <6> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 166.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 170.
 [3
 
 ]
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 214.
+(Font)              <8> on input line 218.
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <8> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 214.
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 218.
 [4
+
+] [5
 
 ]
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <14.4> on input line 218.
+(Font)              <14.4> on input line 225.
 LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <14.4> not available
-(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 218.
-[5
-
-]
-Overfull \vbox (6.98672pt too high) detected at line 259
- []
-
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 225.
 [6
 
 ]
-<slides_10042020_files/figure-beamer/scr_plot_cost-1.pdf, id=76, 722.7pt x 505.
+Overfull \vbox (6.98672pt too high) detected at line 266
+ []
+
+[7
+
+]
+<slides_10042020_files/figure-beamer/scr_plot_cost-1.pdf, id=87, 722.7pt x 505.
 89pt>
 File: slides_10042020_files/figure-beamer/scr_plot_cost-1.pdf Graphic file (typ
 e pdf)
 <use slides_10042020_files/figure-beamer/scr_plot_cost-1.pdf>
 Package pdftex.def Info: slides_10042020_files/figure-beamer/scr_plot_cost-1.pd
-f  used on input line 264.
+f  used on input line 271.
 (pdftex.def)             Requested size: 307.2923pt x 215.1046pt.
 
-Overfull \vbox (3.63109pt too high) detected at line 264
- []
-
-[7
-
- <./slides_10042020_files/figure-beamer/scr_plot_cost-1.pdf>]
-<slides_10042020_files/figure-beamer/scr_plot_density-1.pdf, id=90, 722.7pt x 5
-05.89pt>
-File: slides_10042020_files/figure-beamer/scr_plot_density-1.pdf Graphic file (
-type pdf)
-<use slides_10042020_files/figure-beamer/scr_plot_density-1.pdf>
-Package pdftex.def Info: slides_10042020_files/figure-beamer/scr_plot_density-1
-.pdf  used on input line 269.
-(pdftex.def)             Requested size: 307.2923pt x 215.1046pt.
-
-Overfull \vbox (3.63109pt too high) detected at line 269
+Overfull \vbox (3.63109pt too high) detected at line 271
  []
 
 [8
 
- <./slides_10042020_files/figure-beamer/scr_plot_density-1.pdf>] [9
+ <./slides_10042020_files/figure-beamer/scr_plot_cost-1.pdf>]
+<slides_10042020_files/figure-beamer/scr_plot_density-1.pdf, id=100, 722.7pt x 
+505.89pt>
+File: slides_10042020_files/figure-beamer/scr_plot_density-1.pdf Graphic file (
+type pdf)
+<use slides_10042020_files/figure-beamer/scr_plot_density-1.pdf>
+Package pdftex.def Info: slides_10042020_files/figure-beamer/scr_plot_density-1
+.pdf  used on input line 276.
+(pdftex.def)             Requested size: 307.2923pt x 215.1046pt.
 
-] [10
+Overfull \vbox (3.63109pt too high) detected at line 276
+ []
+
+[9
+
+ <./slides_10042020_files/figure-beamer/scr_plot_density-1.pdf>] [10
+
+] [11
 
 ]
-<slides_10042020_files/figure-beamer/move_data-1.pdf, id=115, 722.7pt x 505.89p
+<slides_10042020_files/figure-beamer/move_data-1.pdf, id=125, 722.7pt x 505.89p
 t>
 File: slides_10042020_files/figure-beamer/move_data-1.pdf Graphic file (type pd
 f)
 <use slides_10042020_files/figure-beamer/move_data-1.pdf>
 Package pdftex.def Info: slides_10042020_files/figure-beamer/move_data-1.pdf  u
-sed on input line 317.
+sed on input line 324.
 (pdftex.def)             Requested size: 307.2923pt x 215.1046pt.
 
-Overfull \vbox (3.63109pt too high) detected at line 317
+Overfull \vbox (3.63109pt too high) detected at line 324
  []
 
-[11
+[12
 
  <./slides_10042020_files/figure-beamer/move_data-1.pdf>]
-<slides_10042020_files/figure-beamer/scr_telem_plot_cost-1.pdf, id=128, 722.7pt
+<slides_10042020_files/figure-beamer/scr_telem_plot_cost-1.pdf, id=138, 722.7pt
  x 505.89pt>
 File: slides_10042020_files/figure-beamer/scr_telem_plot_cost-1.pdf Graphic fil
 e (type pdf)
 <use slides_10042020_files/figure-beamer/scr_telem_plot_cost-1.pdf>
 Package pdftex.def Info: slides_10042020_files/figure-beamer/scr_telem_plot_cos
-t-1.pdf  used on input line 322.
+t-1.pdf  used on input line 329.
 (pdftex.def)             Requested size: 307.2923pt x 215.1046pt.
 
-Overfull \vbox (3.63109pt too high) detected at line 322
+Overfull \vbox (3.63109pt too high) detected at line 329
  []
 
-[12
+[13
 
  <./slides_10042020_files/figure-beamer/scr_telem_plot_cost-1.pdf>]
-<slides_10042020_files/figure-beamer/scr_telem_plot_density-1.pdf, id=141, 722.
+<slides_10042020_files/figure-beamer/scr_telem_plot_density-1.pdf, id=152, 722.
 7pt x 505.89pt>
 File: slides_10042020_files/figure-beamer/scr_telem_plot_density-1.pdf Graphic 
 file (type pdf)
 <use slides_10042020_files/figure-beamer/scr_telem_plot_density-1.pdf>
 Package pdftex.def Info: slides_10042020_files/figure-beamer/scr_telem_plot_den
-sity-1.pdf  used on input line 327.
+sity-1.pdf  used on input line 334.
 (pdftex.def)             Requested size: 307.2923pt x 215.1046pt.
 
-Overfull \vbox (3.63109pt too high) detected at line 327
+Overfull \vbox (3.63109pt too high) detected at line 334
  []
 
-[13
+[14
 
- <./slides_10042020_files/figure-beamer/scr_telem_plot_density-1.pdf>] [14
+ <./slides_10042020_files/figure-beamer/scr_telem_plot_density-1.pdf>] [15
 
 ]
-<slides_10042020_files/figure-beamer/plot_compare_cost-1.pdf, id=162, 722.7pt x
+<slides_10042020_files/figure-beamer/plot_compare_cost-1.pdf, id=172, 722.7pt x
  505.89pt>
 File: slides_10042020_files/figure-beamer/plot_compare_cost-1.pdf Graphic file 
 (type pdf)
 <use slides_10042020_files/figure-beamer/plot_compare_cost-1.pdf>
 Package pdftex.def Info: slides_10042020_files/figure-beamer/plot_compare_cost-
-1.pdf  used on input line 335.
+1.pdf  used on input line 342.
 (pdftex.def)             Requested size: 307.2923pt x 215.1046pt.
 
-Overfull \vbox (3.63109pt too high) detected at line 335
+Overfull \vbox (3.63109pt too high) detected at line 342
  []
 
-[15
+[16
 
  <./slides_10042020_files/figure-beamer/plot_compare_cost-1.pdf>]
-<slides_10042020_files/figure-beamer/plot_compare_density-1.pdf, id=175, 722.7p
+<slides_10042020_files/figure-beamer/plot_compare_density-1.pdf, id=185, 722.7p
 t x 505.89pt>
 File: slides_10042020_files/figure-beamer/plot_compare_density-1.pdf Graphic fi
 le (type pdf)
 <use slides_10042020_files/figure-beamer/plot_compare_density-1.pdf>
 Package pdftex.def Info: slides_10042020_files/figure-beamer/plot_compare_densi
-ty-1.pdf  used on input line 340.
+ty-1.pdf  used on input line 347.
 (pdftex.def)             Requested size: 307.2923pt x 215.1046pt.
 
-Overfull \vbox (3.63109pt too high) detected at line 340
+Overfull \vbox (3.63109pt too high) detected at line 347
  []
 
-[16
+[17
 
- <./slides_10042020_files/figure-beamer/plot_compare_density-1.pdf>]
+ <./slides_10042020_files/figure-beamer/plot_compare_density-1.pdf>] [18
+
+]
 \tf@nav=\write6
 \openout6 = `slides_10042020.nav'.
 
@@ -1440,14 +1444,14 @@ Overfull \vbox (3.63109pt too high) detected at line 340
 
 (./slides_10042020.aux)
 Package rerunfilecheck Info: File `slides_10042020.out' has not changed.
-(rerunfilecheck)             Checksum: 8A03F1D4BE41005C147AC360B323A1A9;541.
+(rerunfilecheck)             Checksum: 1BC8C9AF56291CDEB3EEFEBEA4540625;682.
  ) 
 Here is how much of TeX's memory you used:
- 27946 strings out of 481886
- 547352 string characters out of 5930804
- 847087 words of memory out of 5000000
- 43536 multiletter control sequences out of 15000+600000
- 620471 words of font info for 107 fonts, out of 8000000 for 9000
+ 27962 strings out of 481886
+ 547509 string characters out of 5930804
+ 846565 words of memory out of 5000000
+ 43544 multiletter control sequences out of 15000+600000
+ 620607 words of font info for 108 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  95i,13n,104p,1816b,733s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{
@@ -1456,19 +1460,20 @@ Here is how much of TeX's memory you used:
 }</Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi8.pfb
 ></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi9.pfb
 ></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss10.pf
-b></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss8.pf
-b></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss9.pf
-b></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmssbx10
-.pfb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsso
-10.pfb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lms
-so12.pfb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/l
-msy9.pfb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/l
-mtt9.pfb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/amsf
-onts/symbols/msam5.pfb>
-Output written on slides_10042020.pdf (16 pages, 269974 bytes).
+b></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss12.p
+fb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss8.p
+fb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss9.p
+fb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmssbx1
+0.pfb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss
+o10.pfb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lm
+sso12.pfb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/
+lmsy9.pfb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/
+lmtt9.pfb></Users/gatesdupont/Library/TinyTeX/texmf-dist/fonts/type1/public/ams
+fonts/symbols/msam5.pfb>
+Output written on slides_10042020.pdf (18 pages, 296372 bytes).
 PDF statistics:
- 240 PDF objects out of 1000 (max. 8388607)
- 188 compressed objects within 2 object streams
- 48 named destinations out of 1000 (max. 500000)
- 20590 words of extra memory for PDF output out of 20736 (max. 10000000)
+ 262 PDF objects out of 1000 (max. 8388607)
+ 206 compressed objects within 3 object streams
+ 54 named destinations out of 1000 (max. 500000)
+ 20598 words of extra memory for PDF output out of 20736 (max. 10000000)
 
