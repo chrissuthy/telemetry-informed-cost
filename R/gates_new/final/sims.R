@@ -63,7 +63,7 @@ for(sim in 1:nsims){
   #----Create the landscape----
   
   # Set autocorrelation range
-  autocorr <- 3
+  autocorr <- 2
   
   # Simulate landscape
   gauss_nlm <- nlm_gaussianfield(ncol = lncol, nrow = lnrow, resolution = rr,
@@ -75,6 +75,8 @@ for(sim in 1:nsims){
   landscape <- landscape0^2
   statespace <- as.data.frame(landscape, xy=T)[,c("x", "y")] 
   statespace <- as.matrix(statespace)
+  
+  #plot(landscape)
   
   ##### COLLECT #####
   landscape_ALL[[sim]] <- landscape
@@ -313,6 +315,8 @@ for(sim in 1:nsims){
   
 }
 
+file <- paste0("C:/Users/dupon/Desktop/sims_10052020/sim_data.Rdata")
+save.image(file)
 
 "PART 2: FIT MODEL TO SIMULATIONS"
 
@@ -331,9 +335,6 @@ parallel_out <- list()
 # Data-collection matrix
 out <- matrix(NA, nrow = nfits, ncol = 6)
 colnames(out) <- c("alpha2", "sigma", "p0", "d0", "upsilon", "psi")
-
-# End time vector
-end_time <- c()
 
 # Cluster!
 t0 <- Sys.time()
@@ -400,7 +401,7 @@ results <- foreach(sim=1:nfits, .packages = c(.packages())) %dopar% {
   
   # Time est
   est_t_total <- ((Sys.time()-t0)/sim)*nfits
-  end_time[sim] <- t0 + est_t_total
+  end_time <- t0 + est_t_total
   file <- paste0("C:/Users/dupon/Desktop/sims_10052020/stopwatch.txt")
   if(TRUE) write.table(end_time, file)
   
