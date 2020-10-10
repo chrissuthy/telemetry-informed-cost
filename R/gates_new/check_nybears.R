@@ -120,7 +120,7 @@ p1
 p2 <- ggplot(data = sl_df, aes(sl)) +
   geom_histogram() +
   facet_wrap(~id, scales = "free_y") +
-  xlab("Step length") +
+  xlab("Step length (m)") +
   theme_minimal() +
   theme(aspect.ratio = 1)
 p2
@@ -129,7 +129,7 @@ p2
 p3 <- ggplot(data = sl_df, aes(sl)) +
   geom_histogram() +
   facet_wrap(~id, scales = "free_y") +
-  xlab("Step length") +
+  xlab("Step length (m)") +
   theme_minimal() +
   xlim(0,50) +
   theme(aspect.ratio = 1)
@@ -174,6 +174,7 @@ b3 <- plot_r_tracks(tracks_df, 3)
 
 "CHECK FOR CIRCADIAN STEP LENGTH"
 
+# Function to split tracks and get hourly step length
 df_sl_hr_all <- function(df, id_x){
   
   tmp_df <- df %>% 
@@ -219,12 +220,10 @@ sl_hr_all %>%
   xlim(0,50) +
   theme(aspect.ratio = 1, legend.position = "none")
 
-# Seems like solid consensus that step length (sqrt(2.99 * upsilon)??) is ~10
-
 
 "AVG HOME RANGE RADIUS"
 
-# Calculatet sbar
+# Calculate sbar
 s_bars <- df %>%
   group_by(id) %>%
   summarise(
@@ -265,3 +264,48 @@ ggplot(data = c_df, aes(x = c)) +
   theme(aspect.ratio = 1)
   
 # Avg home range radius ~ 5000
+
+ggplot(data = sl_df, aes(sl)) +
+  geom_histogram() +
+  #facet_wrap(~id, scales = "free_y") +
+  xlab("Step length (m)") +
+  theme_minimal() +
+  xlim(101,NA) +
+  theme(aspect.ratio = 1)
+
+
+"CALCULATE UPSILON"
+
+ups_test <- sl_df %>% filter(sl > 100) %>% pull(sl)
+ups_quant <- as.numeric(quantile(ups_test , prob = 0.95))
+upsilon <- (ups_quant)/sqrt(5.99)
+upsilon
+
+
+"CALCULATE SIGMA"
+
+sig_test <- c[c>100]
+sig_quant <- as.numeric(quantile(sig_test , prob = 0.95))
+sigma <- (sig_quant)/sqrt(5.99)
+sigma
+
+
+"CALCULATE PSI"
+
+psi_num <- sl_df %>% filter(sl < 101) %>% nrow()
+psi_denom <- nrow(sl_df)
+psi <- psi_num/psi_denom
+psi
+
+
+
+
+
+
+
+
+
+
+
+
+
