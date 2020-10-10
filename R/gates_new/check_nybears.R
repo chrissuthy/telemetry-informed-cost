@@ -65,30 +65,36 @@ prop.table(table(diffs.summary$id, diffs.summary$diffs.summary), 1)
 
 
 "SPLIT TRACKS"
+
+# Loop through each individual, split tracks.
 tracks_list <- list()
 sl_list <- list()
+ny_crs <- CRS(sf::st_crs("EPSG:32618")$proj4string)
 
 ids <- df %>% pull(id) %>% unique %>% as.character
 for(i in 1:length(ids)){
   
+  # Split tracks
   tmp_df <- df %>% 
     filter(id == ids[i]) %>%
     arrange(time) %>%
-    mk_track(., .x = X_UTM, .y = Y_UTM, .t = time) %>%
+    mk_track(., .x = X_UTM, .y = Y_UTM, .t = time, crs = ny_crs) %>%
     track_resample(., rate = minutes(60), tolerance = minutes(7)) %>%
     filter_min_n_burst(min_n = 2) %>%
     mutate(id = ids[i])
   
+  # (Also) record step length
   tmp_sl <- tmp_df %>%
     select(-id) %>%
     steps_by_burst() %>%
     pull(sl_)
-  
+
   tracks_list[[i]] <- tmp_df
   sl_list[[i]] <- tmp_sl
   
 }
 
+# Compile data from loops
 tracks_df <- do.call(rbind, tracks_list)
 sl_df <- data.frame(
   id = c(
@@ -98,21 +104,28 @@ sl_df <- data.frame(
   sl = unlist(sl_list)
 )
 
+
+# Plot the tracks now that they're split
 p1 <- ggplot(data = tracks_df, aes(x = x_, y = y_, group = burst_, color = burst_)) +
   geom_path() +
   scale_color_viridis("Track ID") +
   facet_wrap(~id, scales = "free") +
   labs(x = "X", y = "Y") +
   theme_minimal() +
-  theme(aspect.ratio = 1, legend.position = "none", axis.text = element_blank())
+  theme(legend.position = "none") +
+  theme(aspect.ratio = 1)
+p1
 
+# Histogram of step length
 p2 <- ggplot(data = sl_df, aes(sl)) +
   geom_histogram() +
   facet_wrap(~id, scales = "free_y") +
   xlab("Step length") +
   theme_minimal() +
   theme(aspect.ratio = 1)
+p2
 
+# Histogram of step length -- Zoomed
 p3 <- ggplot(data = sl_df, aes(sl)) +
   geom_histogram() +
   facet_wrap(~id, scales = "free_y") +
@@ -120,17 +133,135 @@ p3 <- ggplot(data = sl_df, aes(sl)) +
   theme_minimal() +
   xlim(0,50) +
   theme(aspect.ratio = 1)
-
-p1 / p2 / p3
-
+p3
 
 
+"COMPARE STEP LENGTH TO RASTER"
+
+# Create data frame of ss with elevation
+r_df <- cbind(nybears$ss, nybears$elevation)
+colnames(r_df) <- c("x", "y", "z")
+r <- rasterFromXYZ(r_df)
 
 
+# Make a separate plot for each individual because of geom_tile scale issue
+plot_r_tracks <- function(df, id_x){
+  
+  tracks_df <- df
+  
+  a1 <- tracks_df %>%
+    filter(id == ids[id_x])
+  
+  tmp_b <- ggplot(data = a1) +
+    geom_tile(data=r_df, aes(x=x, y=y, fill=z)) +
+    geom_path(aes(x=x_, y=y_, group = burst_), color = "black") +
+    scale_fill_gradientn(colours=c("red", "yellow")) +
+    xlim(min(a1$x_), max(a1$x_)) + 
+    ylim(min(a1$y_), max(a1$y_)) +
+    theme_minimal() + ggtitle(paste0("N fixes = ", nrow(a1))) +
+    theme(aspect.ratio = 1, legend.position = "none")
+  
+  return(tmp_b)
+}
+
+b1 <- plot_r_tracks(tracks_df, 1)
+b2 <- plot_r_tracks(tracks_df, 2)
+b3 <- plot_r_tracks(tracks_df, 3)
+  
+# Final plot
+(b1+b2+b3)/p2 / p3
 
 
+"CHECK FOR CIRCADIAN STEP LENGTH"
+
+df_sl_hr_all <- function(df, id_x){
+  
+  tmp_df <- df %>% 
+    filter(id == ids[id_x]) %>%
+    arrange(time) %>%
+    mk_track(., .x = X_UTM, .y = Y_UTM, .t = time, crs = ny_crs) %>%
+    track_resample(., rate = minutes(60), tolerance = minutes(7)) %>%
+    filter_min_n_burst(min_n = 2) %>%
+    steps_by_burst() %>%
+    mutate(hr = hour(t1_), 
+           id = ids[id_x]) %>%
+    select(sl_, hr, id)
+  
+  return(tmp_df)
+  
+}
+
+# Bring all the data together
+sl_hr_all <- rbind(
+  df_sl_hr_all(df, 1),
+  df_sl_hr_all(df, 2),
+  df_sl_hr_all(df, 3)
+)
+
+# Final plot
+ggplot(data = sl_hr_all, aes(x = hr, y = sl_, color = id)) +
+  geom_point(pch = 1, alpha = 0.5) +
+  stat_smooth(method = "lm", formula = y ~ poly(x, 4)) +
+  scale_y_log10() +
+  facet_grid(~id) +
+  xlab("Hour") +
+  ylab("Step length (m)") +
+  theme_minimal() +
+  theme(aspect.ratio = 1, legend.position = "none")
+
+# Check step length for more active hours
+sl_hr_all %>%
+  filter( (hr<3 | hr>22) | (hr>11 | hr<14) ) %>%
+  ggplot(data = ., aes(x = sl_, fill = id)) +
+  geom_histogram() +
+  facet_wrap(~id, scales = "free") +
+  theme_minimal() +
+  xlim(0,50) +
+  theme(aspect.ratio = 1, legend.position = "none")
+
+# Seems like solid consensus that step length (sqrt(2.99 * upsilon)??) is ~10
 
 
+"AVG HOME RANGE RADIUS"
 
+# Calculatet sbar
+s_bars <- df %>%
+  group_by(id) %>%
+  summarise(
+    mean_x = mean(X_UTM),
+    mean_y = mean(Y_UTM))
 
+# Calculate distance from sbar for each fix
+c_list1 <- list()
+c_list2 <- list()
+c_list3 <- list()
+c_list <- list(c_list1, c_list2, c_list3)
+for(i in 1:length(ids)){
+  
+  s_bar <- s_bars %>%
+    filter(id == ids[i])
+  
+  tmp_df <- df %>%
+    filter(id == ids[i]) %>%
+    select(x = X_UTM, y = Y_UTM)
+  
+  s1 <- tmp_df
+  s2 <- as.numeric(s_bar[,c(2,3)])
+  
+  
+  for(j in 1:nrow(s1)){
+    c_list[[i]][[j]] <- sqrt(sum(abs(s2-s1[j,])^2))
+  }
 
+}
+
+# Plot the output
+c <- unlist(c_list)
+c_df <- data.frame(c)
+ggplot(data = c_df, aes(x = c)) +
+  geom_histogram(fill = "purple1", color = "white") +
+  theme_minimal() + 
+  xlab("Distance from sbar (m)") +
+  theme(aspect.ratio = 1)
+  
+# Avg home range radius ~ 5000
