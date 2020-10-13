@@ -3,17 +3,19 @@ library(dplyr)
 library(plotrix)
 library(raster)
 library(ggplot2)
+library(viridis)
 library(ggforce)
 library(patchwork)
 library(doParallel)
 library(gdistance)
+library(oSCR)
 
 extract <- raster::extract
 
 #----Simulation settings----
 
 # Manual settings
-nfix = 5
+nfix = 90*24
 
 # Cost
 alpha2 <- 2
@@ -90,6 +92,7 @@ p2 <- ggplot() +
 p1+p2
 
 
+
 "COST SURFACE"
 
 #----Cost surface----
@@ -111,13 +114,14 @@ tr1Corr <-geoCorrection(
   scl=FALSE)
 
 
+
 "SIMULATE MOVEMENT"
 
 # Parallel setup
 ncores = detectCores()-1 # Number of available cores -1 to leave for computer
 cl = makeCluster(ncores) # Make the cluster with that many cores
 registerDoParallel(cl)  
-#clusterExport(cl, varlist = c("e2dist"), envir = environment()) # Export required function to the cores
+clusterExport(cl, varlist = c("e2dist"), envir = environment()) # Export required function to the cores
 
 # Data-collection list
 tracks = list()
@@ -139,7 +143,7 @@ tracks <- foreach(j=1:N, .packages = c(.packages())) %dopar% {
   local_ss <- landscape %>%
     filter(x <= (sbar_x+step_max) & x >= (sbar_x-step_max)) %>%
     filter(y <= (sbar_y+step_max) & y >= (sbar_y-step_max)) %>%
-    mutate(cell_true = cellFromXY(landscape_r, xy = local_ss)) %>%
+    mutate(cell_true = cellFromXY(landscape_r, xy = .)) %>%
     mutate(cell = 1:n())
   
   local_ss_r <- rasterFromXYZ(local_ss[,1:3])
@@ -236,7 +240,24 @@ telemetered_df = do.call(rbind, tracks) %>%
   mutate(times = 1:n()) %>%
   ungroup()
 
+
+# Plot of state-space, surface, & track
+ggplot() +
+  geom_tile(data=as.data.frame(cost, xy=T), aes(x=x, y=y, fill = layer)) +
+  scale_fill_gradientn("Cost", colors = c("darkgreen", "lightgreen")) + ggtitle("Individual track") +
+  geom_path(data = telemetered_df, aes(x=x, y=y, group=id, color = id), size=0.2) +
+  scale_color_viridis("Step number", option="C") +
+  geom_point(data=as.data.frame(acs), aes(x=x, y=y),
+             fill = "black", color="white", pch = 21) +
+  coord_equal() + theme_minimal()
+
   
+
+
+
+
+
+
 
 
 
