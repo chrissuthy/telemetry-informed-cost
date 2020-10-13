@@ -137,7 +137,7 @@ tracks <- foreach(j=1:N, .packages = c(.packages())) %dopar% {
   sbar <- acs[j,]
   sbar_x <- as.numeric(sbar[1])
   sbar_y <- as.numeric(sbar[2])
-  step_max <- (sqrt(5.99) * upsilon) + 3*upsilon
+  step_max <- (sqrt(5.99) * sigma) + 3*upsilon
   
   # Subset statespace for local evaluation
   local_ss <- landscape %>%
@@ -152,7 +152,7 @@ tracks <- foreach(j=1:N, .packages = c(.packages())) %dopar% {
   if(TRUE){
     plot(local_ss_r)
     points(sbar)
-    draw.circle(x = sbar_x, y = sbar_y, radius = sqrt(5.99)*upsilon)
+    draw.circle(x = sbar_x, y = sbar_y, radius = sqrt(5.99)*sigma)
   }
   
   # Create vector of steps
