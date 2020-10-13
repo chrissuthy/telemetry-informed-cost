@@ -263,8 +263,7 @@ ggplot(data = c_df, aes(x = c)) +
   xlab("Distance from sbar (m)") +
   theme(aspect.ratio = 1)
   
-# Avg home range radius ~ 5000
-
+# Home range radius
 ggplot(data = sl_df, aes(sl)) +
   geom_histogram() +
   #facet_wrap(~id, scales = "free_y") +
@@ -274,9 +273,13 @@ ggplot(data = sl_df, aes(sl)) +
   theme(aspect.ratio = 1)
 
 
+#----Approximating parameters----
+
+cutoff <- 1000
+
 "CALCULATE UPSILON"
 
-ups_test <- sl_df %>% filter(sl > 100) %>% pull(sl)
+ups_test <- sl_df %>% filter(sl > cutoff) %>% pull(sl)
 ups_quant <- as.numeric(quantile(ups_test , prob = 0.95))
 upsilon <- (ups_quant)/sqrt(5.99)
 upsilon
@@ -284,7 +287,7 @@ upsilon
 
 "CALCULATE SIGMA"
 
-sig_test <- c[c>100]
+sig_test <- c[c > cutoff]
 sig_quant <- as.numeric(quantile(sig_test , prob = 0.95))
 sigma <- (sig_quant)/sqrt(5.99)
 sigma
@@ -292,20 +295,83 @@ sigma
 
 "CALCULATE PSI"
 
-psi_num <- sl_df %>% filter(sl < 101) %>% nrow()
+psi_num <- sl_df %>% filter(sl > cutoff) %>% nrow()
 psi_denom <- nrow(sl_df)
 psi <- psi_num/psi_denom
 psi
 
 
 
+# Relationship btwn step length cutoff and psi
+out_res <- seq(10, 1000, by = 10)
+out_psi <- c()
+
+for(i in 1:length(out_res)){
+  
+  psi_num <- sl_df %>% filter(sl > out_res[i]) %>% nrow()
+  psi_denom <- nrow(sl_df)
+  psi <- psi_num/psi_denom
+  
+  out_psi[i] <- psi
+}
+
+
+# Relationship btwn step length cutoff and upsilon
+out_res <- seq(10, 1000, by = 10)
+out_ups <- c()
+
+for(i in 1:length(out_res)){
+  
+  ups_test <- sl_df %>% filter(sl > out_res[i]) %>% pull(sl)
+  ups_quant <- as.numeric(quantile(ups_test , prob = 0.95))
+  upsilon <- (ups_quant)/sqrt(5.99)
+  
+  out_ups[i] <- upsilon
+}
+
+# Relationship btwn step length cutoff and sigma
+out_res <- seq(10, 1000, by = 10)
+out_sig <- c()
+
+for(i in 1:length(out_res)){
+  
+  sig_test <- c[c > out_res[i]]
+  sig_quant <- as.numeric(quantile(sig_test , prob = 0.95))
+  sigma <- (sig_quant)/sqrt(5.99)
+  
+  out_sig[i] <- sigma
+}
 
 
 
 
 
+par(mfrow=c(1,3))
+
+par(pty="s")
+plot(out_psi~out_res,
+     type ="l", col = "red",
+     xlab = "Step length cutoff (m)", 
+     ylab = "Approximated psi")
+
+par(pty="s")
+plot(out_ups~out_res,
+     type ="l", col = "red",
+     xlab = "Step length cutoff (m)", 
+     ylab = "Approximated upsilon", asp = 1)
+abline(a = 0, b=1, lty = 2)
 
 
+par(pty="s")
+plot(out_sig~out_res,
+     type ="l", col = "red",
+     xlab = "Step length cutoff (m)", 
+     ylab = "Approximated sigma")
 
 
+par(mfrow=c(1,1))
+plot(out_sig~out_ups,
+     type ="l", col = "red",
+     xlab = "Approximated upsilon", 
+     ylab = "Approximated sigma")
 
