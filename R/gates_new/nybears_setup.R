@@ -244,14 +244,14 @@ telemetered_df = do.call(rbind, tracks) %>%
 # Plot of state-space, surface, & track
 ggplot() +
   geom_tile(data=as.data.frame(cost, xy=T), aes(x=x, y=y, fill = layer)) +
-  scale_fill_gradientn("Cost", colors = c("darkgreen", "lightgreen")) + ggtitle("Individual track") +
+  scale_fill_gradientn("alpha2*cost", colors = c("darkgreen", "lightgreen")) + ggtitle("Individual track") +
   geom_path(data = telemetered_df, aes(x=x, y=y, group=id, color = id), size=0.2) +
-  scale_color_viridis("Step number", option="C") +
+  scale_color_viridis("Individual", option="C") +
   geom_point(data=as.data.frame(acs), aes(x=x, y=y),
              fill = "black", color="white", pch = 21) +
   coord_equal() + theme_minimal()
 
-  
+saveRDS(telemetered_df, file = "output/oct13_N50_alpha2of2.RData")  
 
 
 
