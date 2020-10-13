@@ -10,20 +10,21 @@ library(patchwork)
 
 # Movement model
 psi <- 0.3
-upsilon <- 600
-sigma <- 4300
+upsilon <- 250 #600
+sigma <- 1000  #4300
 
 # SCR
-N <- 30
+N <- 50
 
 # Statespace
-ncol <- nrow <- 175
+ncol <- nrow <- 125 #175
 rr <- upsilon
 autocorr <- 7
 
 # Derived 
 hr95 <- sqrt(5.99) * sigma
-hr95_lim <- 1.5*hr95
+#hr95_lim <- hr95*1  #1.5
+hr95_lim <- 3000
 
 
 #----Landscape----
@@ -34,19 +35,16 @@ landscape0 <- nlm_gaussianfield(
 landscape <- landscape0^2 # I STILL DON'T LIKE THIS! RESTRICTS LOW COST
 landscape_df <- as.data.frame(landscape, xy=T)
 
-ss <- coordinates(landscape0)
-nrow(ss)/6400
+scr_ss <- landscape_df %>%
+  filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
+  filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
+
+ss <- coordinates(scr_ss)
 
 
 #----Activity centers----
-
-ss_avail <- ss %>%
-  as_tibble() %>%
-  filter(x > (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
-  filter(y > (min(y)+hr95_lim) & y < (max(y)-hr95_lim)) %>%
-  as.data.frame()
   
-acs <- ss_avail[sample(1:nrow(ss_avail), size = N),]
+acs <- ss[sample(1:nrow(ss), size = N, replace = T),]
 acs_df <- as.data.frame(acs)
 
 
@@ -66,7 +64,7 @@ text1 <- paste0(
   "Upsilon = ", upsilon, "\n",
   "Sigma = ", sigma, "\n\n",
   "pixels = ", nrow(ss), "\n",
-  "resolution =", "upsilon"
+  "resolution = ", "upsilon"
 )
 
 p2 <- ggplot() +
