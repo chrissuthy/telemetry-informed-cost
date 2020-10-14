@@ -11,6 +11,7 @@ library(gdistance)
 library(oSCR)
 
 extract <- raster::extract
+select <- dplyr::select
 
 #----Simulation settings----
 
@@ -29,13 +30,13 @@ sigma <- 1000  #4300
 N <- 50
 
 # Statespace
-ncol <- nrow <- 125 #175
+ncol <- nrow <- 131 #175
 rr <- upsilon
 autocorr <- 7
 
 # Derived 
 hr95 <- sqrt(5.99) * sigma
-hr95_lim <- 3000 # this is 3 sigma
+hr95_lim <- (3*sigma) + (3*upsilon) # this is 3 sigma
 
 
 #----Landscape----
@@ -49,6 +50,7 @@ landscape <- as.data.frame(landscape_r, xy=T)
 ss <- landscape %>%
   filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
   filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
+nrow(ss)
 
 
 #----Traps----
@@ -69,13 +71,15 @@ acs_df <- as.data.frame(acs)
 
 p1 <- ggplot() +
   geom_tile(data = landscape, aes(x=x, y=y, fill=layer)) +
-  scale_fill_viridis_c("Conductance") +
+  scale_fill_viridis_c("Landscape") +
+  geom_rect(aes(xmin=min(ss$x), xmax=max(ss$x), ymin=min(ss$y), ymax=max(ss$y)), 
+            fill=alpha("white",0.1)) +
   geom_circle(data = acs_df, aes(x0=x, y0=y, r = hr95), 
               lwd = 0.2, color = alpha("white", 0.65)) +
   coord_equal() +
   theme_minimal()
 
-text1 <- paste0(
+p1text1 <- paste0(
   "N = ", N, "\n",
   "Psi = ", psi, "\n",
   "Upsilon = ", upsilon, "\n",
@@ -128,7 +132,7 @@ tracks = list()
 
 # Cluster!
 t0 <- Sys.time()
-tracks <- foreach(j=1:N, .packages = c(.packages())) %dopar% {
+tracks <- foreach(j=1:1, .packages = c(.packages())) %dopar% {
   
   # Generating movement based on pr(move)
   moved <- rbinom(nfix, 1, psi) # This should be different for each individual
@@ -146,10 +150,11 @@ tracks <- foreach(j=1:N, .packages = c(.packages())) %dopar% {
     mutate(cell_true = cellFromXY(landscape_r, xy = .)) %>%
     mutate(cell = 1:n())
   
+  # Make local ss into raster
   local_ss_r <- rasterFromXYZ(local_ss[,1:3])
   
   # Check this out
-  if(TRUE){
+  if(F){
     plot(local_ss_r)
     points(sbar)
     draw.circle(x = sbar_x, y = sbar_y, radius = sqrt(5.99)*sigma)
@@ -158,6 +163,13 @@ tracks <- foreach(j=1:N, .packages = c(.packages())) %dopar% {
   # Create vector of steps
   s.grid <- rep(NA, nfix)
   s.grid[1] <- extract(x = local_ss_r, y = sbar, cellnumber=T)[1]
+  
+  # Calculate ecological distance from the activity center to each pixel (for sigma)
+  # This only has to happen oncemoved
+  Dac <- costDistance(
+    tr1Corr,  
+    c(sbar_x, sbar_y),
+    local_ss %>% select(x,y) %>% as.matrix())
   
   
   # Loop to generate fix locations
@@ -169,7 +181,7 @@ tracks <- foreach(j=1:N, .packages = c(.packages())) %dopar% {
       next # Next mean skip the rest of the for loop
     }
     
-    # If the animal moved...
+    ## If the animal moved...
     
     # Calculate ecological distance from the last position to each pixel (for upsilon)
     D <- costDistance(
@@ -177,11 +189,8 @@ tracks <- foreach(j=1:N, .packages = c(.packages())) %dopar% {
       local_ss %>% filter(cell == s.grid[i-1]) %>% select(x,y) %>% as.matrix(),
       local_ss %>% select(x,y) %>% as.matrix())
     
-    # Calculate euclidean distance from the activity center to each pixel (for sigma)
-    Dac <- e2dist(
-      x = local_ss %>% filter(cell == s.grid[i-1]) %>% select(x,y) %>% as.matrix(),
-      y = local_ss %>% select(x,y) %>% as.matrix()
-    )
+    
+    # Distance from activity center only needs to be calculated once (above)
     
     # Create a movement kernel using ecoD & upsilon and eucDac & sigma
     kern <- exp((-D*D/(2*upsilon*upsilon))  - (Dac*Dac/(2*sigma*sigma)) )
@@ -193,20 +202,21 @@ tracks <- foreach(j=1:N, .packages = c(.packages())) %dopar% {
     kern <- kern/rowSums(kern)
     
     # Plot all of this
-    if(FALSE){
+    if(F){
       par(mfrow=c(2,2))
       
       # Landscape
-      plot(local_ss_r)
+      plot(local_ss_r, main = "Covariate")
       
-      # Eco dist
-      plot(rasterFromXYZ(cbind(local_ss[,1:2], z = as.numeric(D))))
+      # Step dist
+      plot(rasterFromXYZ(cbind(local_ss[,1:2], z = as.numeric(D))), main = "Upsilon eco")
       
-      # Straight dist
-      plot(rasterFromXYZ(cbind(local_ss[,1:2], z = as.numeric(Dac))))
+      # AC dist
+      plot(rasterFromXYZ(cbind(local_ss[,1:2], z = as.numeric(Dac))), main = "Sigma eco")
       
       # Kern
-      plot(rasterFromXYZ(cbind(local_ss[,1:2], z = as.numeric(kern))))
+      plot(rasterFromXYZ(cbind(local_ss[,1:2], z = as.numeric(kern))), main = "Next step probabilities")
+      lines(local_ss[s.grid,c("x","y")])
       
       par(mfrow=c(1,1))
     }
