@@ -123,8 +123,33 @@ tr1Corr <-geoCorrection(
 
 tracks_all <- list()
 
+<<<<<<< HEAD
 
 for(sim in 1:10){
+=======
+# Cluster!
+t0 <- Sys.time()
+tracks <- foreach(j=1:N, .packages = c(.packages())) %dopar% {
+  
+  # Generating movement based on pr(move)
+  moved <- rbinom(nfix, 1, psi) # This should be different for each individual
+  
+  # Get starting position for the individual
+  sbar <- acs[j,]
+  sbar_x <- as.numeric(sbar[1])
+  sbar_y <- as.numeric(sbar[2])
+  step_max <- (sqrt(5.99) * sigma) + 3*upsilon
+  
+  # Subset statespace for local evaluation
+  local_ss <- landscape %>%
+    filter(x <= (sbar_x+step_max) & x >= (sbar_x-step_max)) %>%
+    filter(y <= (sbar_y+step_max) & y >= (sbar_y-step_max)) %>%
+    mutate(cell_true = cellFromXY(landscape_r, xy = .)) %>%
+    mutate(cell = 1:n())
+  
+  # Make local ss into raster
+  local_ss_r <- rasterFromXYZ(local_ss[,1:3])
+>>>>>>> 8f688f90f191c22a533a77117ed9dfe9dbfe15f0
   
   set.seed(sim)
   
