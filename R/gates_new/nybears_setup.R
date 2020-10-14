@@ -79,7 +79,7 @@ p1 <- ggplot() +
   coord_equal() +
   theme_minimal()
 
-p1text1 <- paste0(
+text1 <- paste0(
   "N = ", N, "\n",
   "Psi = ", psi, "\n",
   "Upsilon = ", upsilon, "\n",
@@ -132,7 +132,7 @@ tracks = list()
 
 # Cluster!
 t0 <- Sys.time()
-tracks <- foreach(j=1:1, .packages = c(.packages())) %dopar% {
+tracks <- foreach(j=1:N, .packages = c(.packages())) %dopar% {
   
   # Generating movement based on pr(move)
   moved <- rbinom(nfix, 1, psi) # This should be different for each individual
