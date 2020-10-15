@@ -55,9 +55,34 @@ nrow(ss)
 
 #----Traps----
 
-# trap_array <- ss %>%
-#   filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
-#   filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
+trap_array <- ss %>%
+  filter(x >= (min(x)+3*sigma) & x < (max(x)-3*sigma)) %>%
+  filter(y >= (min(y)+3*sigma) & y < (max(y)-3*sigma))
+
+t_coords_all <- unique(t$x)
+t_coords_label <- c(rep(c(1, rep(0, 7)),floor(length(t_coords_all)/8)),1,0,0)
+t_coords_select <- data.frame(
+  coord = t_coords_all, 
+  indx = t_pos_indx) %>%
+  filter(indx == 1) %>%
+  pull(coord)
+traps <- expand.grid(x = t_coords_select, y = t_coords_select)
+
+
+# Easy way, but doesn't grab pixels
+# traps <- expand.grid(
+#   x = seq(from = mean(t$x)-4*2*sigma,
+#           to = mean(t$x)+4*2*sigma,
+#           length = 10),
+#   y = seq(from = mean(t$y)-4*2*sigma,
+#           to = mean(t$y)+4*2*sigma,
+#           length = 10)
+# )
+
+plot(landscape_r)
+lines(extent(ss), col = "black")
+lines(extent(trap_array), col = "white")
+points(traps, pch = 20, cex = 0.5)
 
 
 #----Activity centers----
