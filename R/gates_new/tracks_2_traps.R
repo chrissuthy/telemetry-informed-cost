@@ -16,7 +16,7 @@ df <- tracks %>%
 
 #----Pixels for traps----
   
-# Get pixel values for each trap, assign trap number
+# Get pixels for each trap, assign trap number
 tt_p <- extract(x = landscape_r, y = traps, cellnumber=T)[,1]
 traps_pxs <- traps %>% 
   mutate(pixel = tt_p) %>%
@@ -25,32 +25,33 @@ traps_pxs <- traps %>%
 
 #----Pixels for fixes----
 
-# Get pixels for thhose locations
+# Get pixels for each fix, assign
 fx_p <- extract(x = landscape_r, y = df[,c("x","y")], cellnumber=T)[,1]
-
-# Assign those pixels to te original data
 fixes_pxs <- df %>%
   mutate(pixel = fx_p)
 
 
-#----Tallying captures----
+#----Tallying captures by days----
 
+# NEED TO FILL IN TIMES 1:(90*24) OR K 1:90
 tracks_w_traps <- fixes_pxs %>%
   left_join(
     x = ., y = traps_pxs, 
     by = c("x", "y", "pixel")) %>% 
   filter(sim == 1) %>%
   na.omit() %>% 
-  select(id, trap, times) %>%
-  group_by(id, trap, times) %>%
+  mutate(K = as.numeric(
+    cut(x = times, 
+        breaks = seq(1, 90*24, by = 24), 
+        right = F))) %>%
+  select(id, trap, K) %>%
+  group_by(id, trap, K) %>%
   summarise(caps = n()) %>%
   distinct()
 
-m <- acast(tracks_w_traps, id~trap~times, value.var = "caps", fill=0)
-dim(m)
-
-
-
+# Convert this into a 3D array
+y <- acast(tracks_w_traps, id~trap~K, value.var = "caps", fill=0)
+dim(y)
 
 
 
