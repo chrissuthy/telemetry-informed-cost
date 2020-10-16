@@ -293,6 +293,17 @@ saveRDS(telemetered_df, file = "output/oct13_N50_alpha2of2.RData")
 
 #----Traps----
 
+landscape0 <- nlm_gaussianfield(
+  ncol = ncol, nrow = nrow, 
+  resolution = rr, autocorr_range = autocorr)
+landscape_r <- landscape0^2 # I STILL DON'T LIKE THIS! RESTRICTS LOW COST
+landscape <- as.data.frame(landscape_r, xy=T)
+
+ss <- landscape %>%
+  filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
+  filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
+nrow(ss)
+
 trap_array <- ss %>%
   filter(x >= (min(x)+3*sigma) & x < (max(x)-3*sigma)) %>%
   filter(y >= (min(y)+3*sigma) & y < (max(y)-3*sigma))
@@ -305,17 +316,6 @@ t_coords_select <- data.frame(
   filter(indx == 1) %>%
   pull(coord)
 traps <- expand.grid(x = t_coords_select, y = t_coords_select)
-
-
-# Easy way, but doesn't grab pixels
-# traps <- expand.grid(
-#   x = seq(from = mean(t$x)-4*2*sigma,
-#           to = mean(t$x)+4*2*sigma,
-#           length = 10),
-#   y = seq(from = mean(t$y)-4*2*sigma,
-#           to = mean(t$y)+4*2*sigma,
-#           length = 10)
-# )
 
 plot(landscape_r)
 lines(extent(ss), col = "black")
