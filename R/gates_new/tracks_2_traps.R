@@ -51,6 +51,9 @@ fixes_pxs <- fixes_per_xy %>%
 
 #----Tallying captures----
 
+# I SHOULD PROBBALY JUST TURN THIS INTO SCR DATA INSTEAD
+# K = 1 for starters
+
 # Join trap locs to track locs
 # keep only fixes on traps
 # tally the number of captures per trap
