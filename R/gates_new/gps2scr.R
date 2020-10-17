@@ -16,7 +16,7 @@ sigma <- 1000
 # Settings: Landscape
 ncol <- nrow <- 131
 rr <- 250
-hr95_lim <- (3*sigma) + (3*upsilon) # this is 3 sigma
+hr95_lim <- (3*sigma) + (3*upsilon)
 
 # Landscape
 landscape0 <- nlm_gaussianfield(
@@ -59,7 +59,7 @@ df <- tracks %>%
 
 
 #----Pixels for traps----
-  
+
 # Get pixels for each trap, assign trap number
 tt_p <- extract(x = landscape_r, y = traps, cellnumber=T)[,1]
 traps_pxs <- traps %>% 
@@ -77,14 +77,11 @@ fixes_pxs <- df %>%
 
 #----Tallying captures by days (across 10 sims)----
 
-# NEED TO FILL IN TIMES 1:(90*24) OR K 1:90
 tracks_w_traps <- fixes_pxs %>%
   # Join traps to fixes via pixels
   left_join(
     x = ., y = traps_pxs, 
     by = c("x", "y", "pixel")) %>% 
-  # Keep only the first sim
-  # filter(sim == 1) %>%
   # Remove fixes not at traps
   na.omit() %>% 
   # Convert times to K
@@ -139,8 +136,8 @@ for(i in 1:10){
   
   tmp_y0 <- y[i,,,]
   
-  ncap <- apply(tmp_y0,1, sum)  # sum of captures for each individual
-  tmp_y <- tmp_y0[ncap>0,,]   # reduce the y array to include only captured individuals
+  ncap <- apply(tmp_y0,1, sum) # sum of captures for each individual
+  tmp_y <- tmp_y0[ncap>0,,] # reduce the y array to include only captured individuals
   
   # Number of individuals captured
   n_inds[i] <- nrow(tmp_y)
