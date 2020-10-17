@@ -270,56 +270,15 @@ for(sim in 1:sims){
 t2 <- Sys.time()
 t2-t1
   
-  
-  
-  
-  
-  
-  # Plot of state-space, surface, & track
-  ggplot() +
-    geom_tile(data=as.data.frame(cost, xy=T), aes(x=x, y=y, fill = layer)) +
-    scale_fill_gradientn("alpha2*cost", colors = c("darkgreen", "lightgreen")) + ggtitle("Individual track") +
-    geom_path(data = telemetered_df, aes(x=x, y=y, group=id, color = id), size=0.2) +
-    scale_color_viridis("Individual", option="C") +
-    geom_point(data=as.data.frame(acs), aes(x=x, y=y),
-               fill = "black", color="white", pch = 21) +
-    coord_equal() + theme_minimal()
-  
-saveRDS(telemetered_df, file = "output/oct13_N50_alpha2of2.RData")  
 
-
-
-
-
-#----Traps----
-
-landscape0 <- nlm_gaussianfield(
-  ncol = ncol, nrow = nrow, 
-  resolution = rr, autocorr_range = autocorr)
-landscape_r <- landscape0^2 # I STILL DON'T LIKE THIS! RESTRICTS LOW COST
-landscape <- as.data.frame(landscape_r, xy=T)
-
-ss <- landscape %>%
-  filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
-  filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
-nrow(ss)
-
-trap_array <- ss %>%
-  filter(x >= (min(x)+3*sigma) & x < (max(x)-3*sigma)) %>%
-  filter(y >= (min(y)+3*sigma) & y < (max(y)-3*sigma))
-
-t_coords_all <- unique(trap_array$x)
-t_coords_label <- c(0, rep(c(1, rep(0, 7)),floor(length(t_coords_all)/8)),1,0)
-t_coords_select <- data.frame(
-  coord = t_coords_all, 
-  indx = t_coords_label) %>%
-  filter(indx == 1) %>%
-  pull(coord)
-traps <- expand.grid(x = t_coords_select, y = t_coords_select)
-
-plot(landscape_r)
-lines(extent(ss), col = "black")
-lines(extent(trap_array), col = "white")
-points(traps, pch = 20, cex = 0.5)
-
-  
+# Plot of state-space, surface, & track
+ggplot() +
+  geom_tile(data=as.data.frame(cost, xy=T), aes(x=x, y=y, fill = layer)) +
+  scale_fill_gradientn("alpha2*cost", colors = c("darkgreen", "lightgreen")) + ggtitle("Individual track") +
+  geom_path(data = telemetered_df, aes(x=x, y=y, group=id, color = id), size=0.2) +
+  scale_color_viridis("Individual", option="C") +
+  geom_point(data=as.data.frame(acs), aes(x=x, y=y),
+             fill = "black", color="white", pch = 21) +
+  coord_equal() + theme_minimal()
+ 
+#saveRDS(telemetered_df, file = "output/oct13_N50_alpha2of2.RData")  
