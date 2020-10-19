@@ -30,7 +30,7 @@ sims = 10
 alpha2 <- 2
 
 # Movement model
-psi <- 0.3
+psi <- 0.5
 upsilon <- 250 #600
 sigma <- 1000  #4300
 
