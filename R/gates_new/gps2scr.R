@@ -6,6 +6,7 @@ library(reshape2)
 library(NLMR)
 select = dplyr::select
 extract = raster::extract
+mutate = dplyr::mutate
 
 #----Make the traps----
 
@@ -50,7 +51,7 @@ traps <- expand.grid(x = t_coords_select, y = t_coords_select)
 #----Raw movement data----
 
 # Get the tracks object
-tracks <- readRDS("output/oct14_N50_alpha2of2_10sims.RData")
+tracks <- readRDS("output/oct18_N50_alpha2of2_psi05_10sims.RData")
 
 # Make thihs into a full df
 df <- tracks %>%
