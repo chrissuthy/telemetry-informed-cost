@@ -51,7 +51,7 @@ traps <- expand.grid(x = t_coords_select, y = t_coords_select)
 #----Raw movement data----
 
 # Get the tracks object
-tracks <- readRDS("output/oct18_N50_alpha2of2_psi05_10sims.RData")
+tracks <- readRDS("output/oct18_N50_alpha2of2_psi05.RData")
 
 # Make thihs into a full df
 df <- tracks %>%
