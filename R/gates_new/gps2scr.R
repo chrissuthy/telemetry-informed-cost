@@ -44,12 +44,13 @@ trap_array <- ss %>%
 
 # Make traps
 trap_array_sf <- st_as_sf(trap_array, coords = c('y', 'x'))
-traps <- st_make_grid(trap_array_sf, n=c(10,10)) %>%
+traps <- st_make_grid(trap_array_sf, n=c(10,10)) %>% # alternatively could use cellsize
   as_Spatial() %>%
   coordinates() %>%
   as.data.frame() %>%
   select(x = V2, y = V1)
-
+rownames(traps) <- NULL
+table(diff(traps$y))
 
 
 #----Raw movement data----
