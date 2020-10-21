@@ -4,20 +4,25 @@ library(ggplot2)
 library(tidyr)
 library(reshape2)
 library(NLMR)
+library(sf)
 select = dplyr::select
 extract = raster::extract
 mutate = dplyr::mutate
 
 #----Make the traps----
 
-# Settings: Parameters
-upsilon <- 250
-sigma <- 1000
+# Movement model
+upsilon <- 0.5 #0.6
+sigma <- 2  #4.3
 
-# Settings: Landscape
-ncol <- nrow <- 131
-rr <- 250
-hr95_lim <- (3*sigma) + (3*upsilon)
+# Statespace
+ncol <- nrow <- 149 #175
+rr <- upsilon/2
+autocorr <- 6
+
+# Derived 
+hr95 <- sqrt(5.99) * sigma
+hr95_lim <- (3*sigma) #+ (3*upsilon)
 
 # Landscape
 landscape0 <- nlm_gaussianfield(
@@ -37,15 +42,14 @@ trap_array <- ss %>%
   filter(x >= (min(x)+3*sigma) & x < (max(x)-3*sigma)) %>%
   filter(y >= (min(y)+3*sigma) & y < (max(y)-3*sigma))
 
-# Traps
-t_coords_all <- unique(trap_array$x)
-t_coords_label <- c(0, rep(c(1, rep(0, 7)),floor(length(t_coords_all)/8)),1,0)
-t_coords_select <- data.frame(
-  coord = t_coords_all, 
-  indx = t_coords_label) %>%
-  filter(indx == 1) %>%
-  pull(coord)
-traps <- expand.grid(x = t_coords_select, y = t_coords_select)
+# Make traps
+trap_array_sf <- st_as_sf(trap_array, coords = c('y', 'x'))
+traps <- st_make_grid(trap_array_sf, n=c(10,10)) %>%
+  as_Spatial() %>%
+  coordinates() %>%
+  as.data.frame() %>%
+  select(x = V2, y = V1)
+
 
 
 #----Raw movement data----
