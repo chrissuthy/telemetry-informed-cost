@@ -281,4 +281,4 @@ ggplot() +
              fill = "black", color="white", pch = 21) +
   coord_equal() + theme_minimal()
  
-#saveRDS(telemetered_df, file = "output/oct13_N50_alpha2of2.RData")  
+#saveRDS(tracks_all, file = "output/oct18_N50_alpha2of2_psi05.RData")  
