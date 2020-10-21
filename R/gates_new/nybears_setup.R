@@ -30,21 +30,21 @@ sims = 10
 alpha2 <- 2
 
 # Movement model
-psi <- 0.5
-upsilon <- 250 #600
-sigma <- 1000  #4300
+psi <- 0.9
+upsilon <- 0.5 #0.6
+sigma <- 2  #4.3
 
 # SCR
 N <- 50
 
 # Statespace
-ncol <- nrow <- 131 #175
-rr <- upsilon
-autocorr <- 7
+ncol <- nrow <- 149 #175
+rr <- upsilon/2
+autocorr <- 6
 
 # Derived 
 hr95 <- sqrt(5.99) * sigma
-hr95_lim <- (3*sigma) + (3*upsilon) # this is 3 sigma
+hr95_lim <- (3*sigma) #+ (3*upsilon)
 
 
 #----Start sims----
