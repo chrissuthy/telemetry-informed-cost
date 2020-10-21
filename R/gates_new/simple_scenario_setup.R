@@ -26,7 +26,7 @@ sigma <- 2  #4.3
 N <- 50
 
 # Statespace
-ncol <- nrow <- 149 #175
+ncol <- nrow <- 249 #175
 rr <- upsilon/2
 autocorr <- 6
 
