@@ -126,3 +126,12 @@ boxplot(data.frame(Euc = euc_hr,
                    Ecol_2 = ecol_hr2),
         ylab="Pixels used",
         xlab="Scenario")
+
+
+
+par(mfrow=c(1,3))
+plot(rasterFromXYZ(cbind(landscape[,1:2], euc_p[4000,])))
+plot(rasterFromXYZ(cbind(landscape[,1:2], ecol_p[4000,])))
+plot(rasterFromXYZ(cbind(landscape[,1:2], ecol_p2[4000,])))
+par(mfrow=c(1,1))
+
