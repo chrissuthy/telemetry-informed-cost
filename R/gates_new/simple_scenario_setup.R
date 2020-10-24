@@ -19,27 +19,31 @@ alpha2 <- 2
 
 # Movement model
 psi <- 0.9
-upsilon <- 0.5 #0.6
-sigma <- 2  #4.3
+upsilon <- 0.5 #bears: 0.6
+sigma <- 2  #bears: 4.3
 
 # SCR
 N <- 50
 
 # Statespace
-ncol <- nrow <- 249 #175
+ncol <- nrow <- 149
 rr <- upsilon/2
 autocorr <- 6
 
 # Derived 
 hr95 <- sqrt(5.99) * sigma
-hr95_lim <- (3*sigma) #+ (3*upsilon)
+hr95_lim <- (3*sigma)
 
+#----Landscape----
+
+# Make the landscape
 landscape0 <- nlm_gaussianfield(
   ncol = ncol, nrow = nrow, 
   resolution = rr, autocorr_range = autocorr)
 landscape_r <- landscape0^2 # I STILL DON'T LIKE THIS! RESTRICTS LOW COST
 landscape <- as.data.frame(landscape_r, xy=T)
 
+# Subset the state-space
 ss <- landscape %>%
   filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
   filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
