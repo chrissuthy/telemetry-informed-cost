@@ -31,15 +31,17 @@ alpha2 <- 2
 
 # Movement model
 psi <- 0.9
-upsilon <- 0.5 #0.6
-sigma <- 2  #4.3
+upsilon <- 0.25 #0.6
+sigma <- 1  #4.3
+scale_factor_cost <- 4 # For scaling sigma later
+sigma_sf <- sigma * scale_factor_cost
 
 # SCR
 N <- 50
 
 # Statespace
-ncol <- nrow <- 149 #175
-rr <- upsilon/2
+ncol <- nrow <- 125 #175
+rr <- upsilon
 autocorr <- 6
 
 # Derived 
@@ -78,15 +80,15 @@ for(sim in 1:sims){
   
   #----Plotting----
   
-  # p1 <- ggplot() +
-  #   geom_tile(data = landscape, aes(x=x, y=y, fill=layer)) +
-  #   scale_fill_viridis_c("Landscape") +
-  #   geom_rect(aes(xmin=min(ss$x), xmax=max(ss$x), ymin=min(ss$y), ymax=max(ss$y)), 
-  #             fill=alpha("white",0.1)) +
-  #   geom_circle(data = acs_df, aes(x0=x, y0=y, r = hr95), 
-  #               lwd = 0.2, color = alpha("white", 0.65)) +
-  #   coord_equal() +
-  #   theme_minimal()
+  p1 <- ggplot() +
+    geom_tile(data = landscape, aes(x=x, y=y, fill=layer)) +
+    scale_fill_viridis_c("Landscape") +
+    geom_rect(aes(xmin=min(ss$x), xmax=max(ss$x), ymin=min(ss$y), ymax=max(ss$y)),
+              fill=alpha("white",0.25)) +
+    geom_circle(data = acs_df, aes(x0=x, y0=y, r = hr95),
+                lwd = 0.2, color = alpha("white", 0.65)) +
+    coord_equal() +
+    theme_minimal()
   # 
   # text1 <- paste0(
   #   "N = ", N, "\n",
@@ -207,7 +209,7 @@ for(sim in 1:sims){
       # Distance from activity center only needs to be calculated once (above)
       
       # Create a movement kernel using ecoD & upsilon and eucDac & sigma
-      kern <- exp((-D*D/(2*upsilon*upsilon))  - (Dac*Dac/(2*sigma*sigma)) )
+      kern <- exp((-D*D/(2*upsilon*upsilon))  - (Dac*Dac/(2*sigma_sf*sigma_sf)) )
       
       # Assign the current position a probability of zero (can't stay in the same spot, b/c Psi=1)
       kern[s.grid[i-1]] <- 0
