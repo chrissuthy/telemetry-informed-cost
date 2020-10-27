@@ -24,7 +24,7 @@ ref.Dmat_i <- function(from, to, local_ss_r, Dmat_i){
 
 # Manual settings
 nfix = 90*24
-sims = 10
+sims = 1
 
 # Cost
 alpha2 <- 2
@@ -54,6 +54,12 @@ hr95_lim <- (3*sigma) * 1.5 # typically only need 3sig, but adding extra because
 t1 <- Sys.time()
 tracks_all <- list()
 
+# Parallel setup
+ncores = detectCores()-1 # Number of available cores -1 to leave for computer
+cl = makeCluster(ncores) # Make the cluster with that many cores
+registerDoParallel(cl)  
+clusterExport(cl, varlist = c("e2dist"), envir = environment()) # Export required function to the cores
+
 for(sim in 1:sims){
   
   set.seed(sim)
@@ -81,16 +87,16 @@ for(sim in 1:sims){
   
   #----Plotting----
   
-  p1 <- ggplot() +
-    geom_tile(data = landscape, aes(x=x, y=y, fill=layer)) +
-    scale_fill_viridis_c("Landscape") +
-    geom_rect(aes(xmin=min(ss$x), xmax=max(ss$x), ymin=min(ss$y), ymax=max(ss$y)),
-              fill=alpha("white",0.25)) +
-    geom_circle(data = acs_df, aes(x0=x, y0=y, r = hr95),
-                lwd = 0.2, color = alpha("white", 0.65)) +
-    coord_equal() +
-    theme_minimal()
-  p1
+  # p1 <- ggplot() +
+  #   geom_tile(data = landscape, aes(x=x, y=y, fill=layer)) +
+  #   scale_fill_viridis_c("Landscape") +
+  #   geom_rect(aes(xmin=min(ss$x), xmax=max(ss$x), ymin=min(ss$y), ymax=max(ss$y)),
+  #             fill=alpha("white",0.25)) +
+  #   geom_circle(data = acs_df, aes(x0=x, y0=y, r = hr95),
+  #               lwd = 0.2, color = alpha("white", 0.65)) +
+  #   coord_equal() +
+  #   theme_minimal()
+  # p1
   # text1 <- paste0(
   #   "N = ", N, "\n",
   #   "Psi = ", psi, "\n",
@@ -131,12 +137,12 @@ for(sim in 1:sims){
   
   "SIMULATE MOVEMENT"
   
-  # Parallel setup
-  ncores = detectCores()-1 # Number of available cores -1 to leave for computer
-  cl = makeCluster(ncores) # Make the cluster with that many cores
-  registerDoParallel(cl)  
-  clusterExport(cl, varlist = c("e2dist"), envir = environment()) # Export required function to the cores
-  
+  # # Parallel setup
+  # ncores = detectCores()-1 # Number of available cores -1 to leave for computer
+  # cl = makeCluster(ncores) # Make the cluster with that many cores
+  # registerDoParallel(cl)  
+  # clusterExport(cl, varlist = c("e2dist"), envir = environment()) # Export required function to the cores
+  # 
   # Data-collection list
   tracks = list()
   
@@ -182,9 +188,11 @@ for(sim in 1:sims){
     
     # Calculate ecological distance from the activity center to each pixel (for sigma)
     # This only has to happen once
+    dac_to <- as.matrix(local_ss[,c("x","y")])
+    
     Dac <- ref.Dmat_i(
       from = sbar, 
-      to = local_ss %>% select(x,y) %>% as.matrix(), 
+      to = dac_to, 
       local_ss_r, Dmat_i)
     
     
@@ -200,9 +208,12 @@ for(sim in 1:sims){
       ## If the animal moved...
       
       # Calculate ecological distance from the last position to each pixel (for upsilon)
+      d_from <- as.matrix(local_ss[local_ss$cell == s.grid[i-1], c("x","y")])
+      d_to <- as.matrix(local_ss[,c("x","y")])
+      
       D <- ref.Dmat_i(
-        from = local_ss %>% filter(cell == s.grid[i-1]) %>% select(x,y) %>% as.matrix(),
-        to = local_ss %>% select(x,y) %>% as.matrix(),
+        from = d_from,
+        to = d_to,
         local_ss_r,
         Dmat_i
       )
@@ -219,7 +230,7 @@ for(sim in 1:sims){
       kern <- kern/rowSums(kern)
       
       # Plot all of this
-      if(T){
+      if(F){
         par(mfrow=c(2,2))
         
         # Landscape
@@ -255,7 +266,7 @@ for(sim in 1:sims){
   }
   
   # Post-cluster cleanup
-  stopCluster(cl)
+  # stopCluster(cl)
   tf <- Sys.time()
   tf-t0
   
@@ -275,6 +286,7 @@ for(sim in 1:sims){
   
   
 }
+stopCluster(cl)
 t2 <- Sys.time()
 t2-t1
 
@@ -289,4 +301,4 @@ ggplot() +
              fill = "black", color="white", pch = 21) +
   coord_equal() + theme_minimal()
 
-saveRDS(tracks_all, file = "output/oct26_N50_alpha2of2_psi09_sigupsSF.RData")  
+# saveRDS(tracks_all, file = "output/oct27_N50_alpha2of2_psi09_sigupsSF.RData")  
