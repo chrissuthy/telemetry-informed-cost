@@ -24,7 +24,7 @@ ref.Dmat_i <- function(from, to, local_ss_r, Dmat_i){
 
 # Manual settings
 nfix = 90*24
-sims = 1
+sims = 10
 
 # Cost
 alpha2 <- 2

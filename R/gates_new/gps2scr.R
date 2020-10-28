@@ -12,23 +12,26 @@ mutate = dplyr::mutate
 #----Make the traps----
 
 # Movement model
-upsilon <- 0.5 #0.6
-sigma <- 2  #4.3
+upsilon <- 0.25 #0.6
+sigma <- 1  #4.3
+
+# SCR
+N <- 50
 
 # Statespace
-ncol <- nrow <- 149 #175
-rr <- upsilon/2
+ncol <- nrow <- 137 #125 for 3sig move buffer, ups=0.25, sig=1
+rr <- upsilon # Do we still want to make this 0.5*ups?
 autocorr <- 6
 
 # Derived 
 hr95 <- sqrt(5.99) * sigma
-hr95_lim <- (3*sigma) #+ (3*upsilon)
+hr95_lim <- (3*sigma) * 1.5 # typically only need 3sig, but adding extra because of scale factor
 
 # Landscape
 landscape0 <- nlm_gaussianfield(
   ncol = ncol, nrow = nrow, 
-  resolution = rr, autocorr_range = 7)
-landscape_r <- landscape0^2 # I STILL DON'T LIKE THIS! RESTRICTS LOW COST
+  resolution = rr, autocorr_range = autocorr)
+landscape_r <- landscape0^2
 landscape <- as.data.frame(landscape_r, xy=T)
 
 # State-space
@@ -44,25 +47,40 @@ trap_array <- ss %>%
 
 # Make traps
 trap_array_sf <- st_as_sf(trap_array, coords = c('y', 'x'))
-traps <- st_make_grid(trap_array_sf, n=c(10,10)) %>% # alternatively could use cellsize
+traps <- st_make_grid(trap_array_sf, n = c(10,10)) %>% # alternatively could use cellsize
   as_Spatial() %>%
   coordinates() %>%
   as.data.frame() %>%
-  select(x = V2, y = V1)
+  select(x = V2, y = V1) %>%
+  extract(landscape_r, ., cellnumbers=T, df=T) %>%
+  pull(cells) %>%
+  xyFromCell(landscape_r, .) %>%
+  as.data.frame()
 rownames(traps) <- NULL
 table(diff(traps$y))
 
+nrow(traps)
+plot(landscape_r)
+points(traps)
 
 #----Raw movement data----
 
 # Get the tracks object
-tracks <- readRDS("output/oct18_N50_alpha2of2_psi05.RData")
+tracks <- readRDS("output/oct27_N50_alpha2of2_psi09_sigupsSF.RData")
 
 # Make thihs into a full df
 df <- tracks %>%
   do.call(rbind, .) %>%
   mutate(sim = rep(1:10, each = 90*24*50))
 
+# Plot
+par(mfrow = c(2,5), pty = "s")
+for(i in 1:10){
+  plot(landscape0)
+  lines(y~x, data = df[df$sim==i,], col = alpha("red", 0.3))
+  points(traps, pch = 20) 
+}
+par(mfrow=c(1,1))
 
 #----Pixels for traps----
 
@@ -78,7 +96,8 @@ traps_pxs <- traps %>%
 # Get pixels for each fix, assign
 fx_p <- extract(x = landscape_r, y = df[,c("x","y")], cellnumber=T)[,1]
 fixes_pxs <- df %>%
-  mutate(pixel = fx_p)
+  mutate(pixel = fx_p) %>%
+  as.data.frame()
 
 
 #----Tallying captures by days (across 10 sims)----
@@ -102,7 +121,11 @@ tracks_w_traps <- fixes_pxs %>%
   # Summarize obs into n traps per K
   summarise(caps = n()) %>%
   # Keep only unique rows 
-  distinct()
+  distinct() %>%
+  as.data.frame() %>%
+  sample_frac(1) #                                   THINNING!
+
+# I DONT THINK THE THINNING IS WORKING RIGHT
 
 # Make a big df of all possible options (to fill in missing data)
 tofill_df <- expand.grid(
@@ -116,7 +139,8 @@ tofill_df <- expand.grid(
 # From all options, only keep those not found in the real data
 filler_df <- setdiff(
   tofill_df[,c("id", "trap", "K", "sim")], 
-  tracks_w_traps[,c("id", "trap", "K", "sim")])
+  tracks_w_traps[,c("id", "trap", "K", "sim")]) %>%
+  as.data.frame()
 filler_df$caps = 0
 
 # Combine filler data so all options are included
@@ -173,22 +197,22 @@ for(i in 1:10){
 par(mfrow=c(2,3))
 
 # Number of individuals captured
-hist(n_inds, breaks = 20, main = "n inds. captured", xlab = NA)
+hist(n_inds, breaks = 20, main = "n inds. captured", xlab = NA, col = "gray80")
 
 # Average number of captures per individual
-hist(mean_caps, breaks = 20, main = "Avg. captures per ind.", xlab = NA)
+hist(mean_caps, breaks = 20, main = "Avg. captures per ind.", xlab = NA, col = "gray80")
 
 # Total captures
-hist(caps_total, breaks = 20, main = "Total captures", xlab = NA)
+hist(caps_total, breaks = 20, main = "Total captures", xlab = NA, col = "gray80")
 
 # 2 traps
-hist(caps_2traps, breaks = 20, main = "Inds. captured on 2 traps", xlab = NA)
+hist(caps_2traps, breaks = 20, main = "Inds. captured on 2 traps", xlab = NA, col = "gray80")
 
 # 3 traps
-hist(caps_3traps, breaks = 20, main = "Inds. captured on 3 traps", xlab = NA)
+hist(caps_3traps, breaks = 20, main = "Inds. captured on 3 traps", xlab = NA, col = "gray80")
 
 # 3 traps
-hist(caps_4traps, breaks = 20, main = "Inds. captured on 4 traps", xlab = NA)
+hist(caps_4traps, breaks = 20, main = "Inds. captured on 4 traps", xlab = NA, col = "gray80")
 
 par(mfrow=c(1,1))
 
