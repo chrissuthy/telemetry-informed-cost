@@ -153,6 +153,9 @@ y <- acast(cap_hist, sim~id~trap~K, value.var = "caps", fill=0)
 dim(y)
 y[y>0] <- 1
 
+# THINNING
+to_thin <- y[y>0]
+y[y>0] <- rbinom(length(to_thin), 1, 0.1)
 
 #---Summary stats----
 
@@ -216,4 +219,6 @@ hist(caps_4traps, breaks = 20, main = "Inds. captured on 4 traps", xlab = NA, co
 
 par(mfrow=c(1,1))
 
+#----Save SCR edf----
 
+#saveRDS(y, file = "output/oct29_edf_10sim.RData")
