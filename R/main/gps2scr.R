@@ -9,6 +9,9 @@ select = dplyr::select
 extract = raster::extract
 mutate = dplyr::mutate
 
+#### THINNING ####
+prob_thin <- 0.1
+
 #----Make the traps----
 
 # Movement model
@@ -146,6 +149,7 @@ filler_df$caps = 0
 # Combine filler data so all options are included
 cap_hist <- rbind(tracks_w_traps, filler_df)
 
+
 #----Converting to 4D array----
 
 # Sim 1:10, id 1:50, trap 1:100, K 1:90
@@ -155,7 +159,8 @@ y[y>0] <- 1
 
 # THINNING
 to_thin <- y[y>0]
-y[y>0] <- rbinom(length(to_thin), 1, 0.1)
+y[y>0] <- rbinom(length(to_thin), 1, prob_thin)
+
 
 #---Summary stats----
 
@@ -222,3 +227,5 @@ par(mfrow=c(1,1))
 #----Save SCR edf----
 
 #saveRDS(y, file = "output/oct29_edf_10sim.RData")
+#saveRDS(traps, file = "output/oct29_traps.RData")
+#saveRDS(ss, file = "output/oct29_ss.RData")
