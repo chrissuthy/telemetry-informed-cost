@@ -50,6 +50,13 @@ hr95 <- sqrt(5.99) * sigma
 hr95_lim <- (3*sigma) * 1.5 # typically only need 3sig, but adding extra because of scale factor
 
 
+#----Initialize items to save---
+
+landscape_ALL <- list()
+teldata_raw_ALL <- list()
+cost.data_ALL <- list()
+
+
 #----Start sims----
 t1 <- Sys.time()
 tracks_all <- list()
@@ -71,6 +78,9 @@ for(sim in 1:sims){
     resolution = rr, autocorr_range = autocorr)
   landscape_r <- landscape0^2
   landscape <- as.data.frame(landscape_r, xy=T)
+  
+  # Save landscape to output
+  landscape_ALL[[sim]] <- landscape_r
   
   ss <- landscape %>%
     filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
@@ -279,6 +289,40 @@ for(sim in 1:sims){
   tracks_all[[sim]] <- telemetered_df
   
   
+  "COMPILE TELEM"
+  
+  #----Compile telemetry data----
+  
+  # Data-collection setup
+  cost.data <- list()
+  teldata_raw <- list()
+  
+  # Select k of n simulated individuals
+  for(i in 1:N){
+    
+    # Subset track
+    tmp_track <- tracks[[i]][,1:2]
+    
+    # trimS type buffer
+    trimS <- 3*sigma                       # DOES THIS NEED TO BE LOWER/HIGHER? SF??
+    
+    # Get extent from track
+    tmp_move_ext <- extent(c(min(tmp_track$x)-trimS, max(tmp_track$x)+trimS,
+                             min(tmp_track$y)-trimS, max(tmp_track$y)+trimS))
+    
+    # Crop landscape to extent
+    tmp_landscape_crop <- raster::crop(landscape_r, tmp_move_ext)
+    
+    # Assign individual-specific objects
+    teldata_raw[[i]] <- tmp_track
+    cost.data[[i]] <- as.matrix(as.data.frame(tmp_landscape_crop, xy=T))
+    
+  }
+  
+  teldata_raw_ALL[[sim]] <- teldata_raw
+  cost.data_ALL[[sim]] <- cost.data
+  
+  
 }
 stopCluster(cl)
 t2 <- Sys.time()
@@ -295,4 +339,24 @@ ggplot() +
              fill = "black", color="white", pch = 21) +
   coord_equal() + theme_minimal()
 
-# saveRDS(tracks_all, file = "output/oct27_N50_alpha2of2_psi09_sigupsSF.RData")  
+
+#----SAVE DATA FOR MODELS----
+saveRDS(teldata_raw_ALL, "output/model_data/teldata_raw.RData")
+saveRDS(cost.data_ALL,   "output/model_data/cost_data.RData")
+saveRDS(landscape_ALL,   "output/model_data/landscape.RData")
+saveRDS(tracks_all, file = "output/model_data/tracks_all.RData")  
+
+
+
+
+
+########## DATA FOR MMSCRECO
+
+# teldata = teldata_raw_ALL[[sim_c]], 
+# spatdata = cost.data_ALL[[sim_c]],
+# landscape = landscape_ALL[[sim_c]], # This should be easy
+# scr_y = Y_ALL[[sim_c]] # I'll get this from gps2scr.R
+
+
+
+

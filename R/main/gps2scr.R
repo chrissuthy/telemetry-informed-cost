@@ -224,8 +224,25 @@ hist(caps_4traps, breaks = 20, main = "Inds. captured on 4 traps", xlab = NA, co
 
 par(mfrow=c(1,1))
 
-#----Save SCR edf----
+#----Save SCR data----
 
-#saveRDS(y, file = "output/oct29_edf_10sim.RData")
-#saveRDS(traps, file = "output/oct29_traps.RData")
-#saveRDS(ss, file = "output/oct29_ss.RData")
+# Collapse to captured
+y_ALL <- list()
+for(i in 1:10){
+  
+  # Reduce to captured
+  tmp_y <- y[i,,,]
+  captured <- apply(tmp_y,1,sum)>0
+  y_ALL[[i]] <- tmp_y[captured,,]
+  
+}
+
+saveRDS(y_ALL, file = "output/model_data/y.RData")
+saveRDS(traps, file = "output/model_data/traps.RData")
+saveRDS(ss, file = "output/model_data/ss.RData")
+
+
+
+
+
+
