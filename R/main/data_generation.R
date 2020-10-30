@@ -137,12 +137,6 @@ for(sim in 1:sims){
   
   "SIMULATE MOVEMENT"
   
-  # # Parallel setup
-  # ncores = detectCores()-1 # Number of available cores -1 to leave for computer
-  # cl = makeCluster(ncores) # Make the cluster with that many cores
-  # registerDoParallel(cl)  
-  # clusterExport(cl, varlist = c("e2dist"), envir = environment()) # Export required function to the cores
-  # 
   # Data-collection list
   tracks = list()
   
@@ -279,8 +273,8 @@ for(sim in 1:sims){
   
   write.table(
     telemetered_df, 
-    file = paste0("C:/Users/dupon/Desktop/cost_sims/sim", sim, ".txt")
-    )
+    file = paste0("simout/sim", sim, ".txt")
+  )
   
   tracks_all[[sim]] <- telemetered_df
   
