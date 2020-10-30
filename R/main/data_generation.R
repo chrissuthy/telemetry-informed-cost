@@ -82,7 +82,10 @@ for(sim in 1:sims){
   # Save landscape to output
   landscape_ALL[[sim]] <- landscape_r
   
-  ss <- landscape %>%
+  ss <- landscape_r %>%
+    aggregate(., fact = 4) %>%
+    as.data.frame(., xy=T) %>%
+    select(x, y) %>%
     filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
     filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
   nrow(ss)
