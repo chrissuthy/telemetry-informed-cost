@@ -350,6 +350,9 @@ compareMethods <- function(){
   
 }
 
+dump("compareMethods", paste(temp, "/compareMethods.R", sep =""))
+source(paste(temp, "/compareMethods.R", sep = ""))
+
 RRprofStart()
 compareMethods()
 RRprofStop()

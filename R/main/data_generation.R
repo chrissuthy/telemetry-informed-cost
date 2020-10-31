@@ -41,8 +41,8 @@ sigma_sf <- sigma * scale_factor_cost
 N <- 50
 
 # Statespace
-ncol <- nrow <- 137*2 #125 for 3sig move buffer, ups=0.25, sig=1
-rr <- upsilon/2
+ncol <- nrow <- 137 #125 for 3sig move buffer, ups=0.25, sig=1
+rr <- upsilon
 autocorr <- 6
 
 # Derived 
@@ -91,7 +91,7 @@ for(sim in 1:sims){
   
   # Make ss using aggregated pixels
   ss <- landscape_r %>%
-    aggregate(., fact = 8) %>%
+    aggregate(., fact = 4) %>%
     as.data.frame(., xy=T) %>%
     select(x, y) %>%
     filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
@@ -173,7 +173,7 @@ for(sim in 1:sims){
     sbar <- acs[j,]
     sbar_x <- as.numeric(sbar[1])
     sbar_y <- as.numeric(sbar[2])
-    step_max <- ((sqrt(5.99) * sigma) + 3*upsilon) * 1.5 # 1.5x b/c sig_sf
+    step_max <- (sqrt(5.99) * sigma_sf) * 1.05 # 1.5x b/c sig_sf
     
     # Subset statespace for local evaluation
     local_ss <- landscape %>%
