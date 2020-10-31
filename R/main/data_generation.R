@@ -42,7 +42,7 @@ N <- 50
 
 # Statespace
 ncol <- nrow <- 137 #125 for 3sig move buffer, ups=0.25, sig=1
-rr <- upsilon
+rr <- upsilon # Actually, could this even by 2 ups? since ups_sf = ups*4
 autocorr <- 6
 
 # Derived 
