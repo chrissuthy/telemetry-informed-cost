@@ -22,8 +22,8 @@ sigma <- 1  #4.3
 N <- 50
 
 # Statespace
-ncol <- nrow <- 137 #125 for 3sig move buffer, ups=0.25, sig=1
-rr <- upsilon # Do we still want to make this 0.5*ups?
+# ncol <- nrow <- 137 #125 for 3sig move buffer, ups=0.25, sig=1
+# rr <- upsilon # Do we still want to make this 0.5*ups?
 autocorr <- 6
 
 # Derived 
@@ -38,10 +38,7 @@ landscape_r <- landscape0^2
 landscape <- as.data.frame(landscape_r, xy=T)
 
 # State-space
-ss <- landscape %>%
-  filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
-  filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
-nrow(ss)
+ss <- readRDS("output/model_data/ss.RData")
 
 # Trap array (space)
 trap_array <- ss %>%
@@ -238,11 +235,3 @@ for(i in 1:10){
 }
 
 saveRDS(y_ALL, file = "output/model_data/y.RData")
-saveRDS(traps, file = "output/model_data/traps.RData")
-saveRDS(ss, file = "output/model_data/ss.RData")
-
-
-
-
-
-

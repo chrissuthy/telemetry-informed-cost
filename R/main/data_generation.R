@@ -41,8 +41,8 @@ sigma_sf <- sigma * scale_factor_cost
 N <- 50
 
 # Statespace
-ncol <- nrow <- 137 #125 for 3sig move buffer, ups=0.25, sig=1
-rr <- upsilon # Do we still want to make this 0.5*ups?
+ncol <- nrow <- 137*2 #125 for 3sig move buffer, ups=0.25, sig=1
+rr <- upsilon/2
 autocorr <- 6
 
 # Derived 
@@ -68,7 +68,7 @@ registerDoParallel(cl)
 clusterExport(cl, varlist = c("e2dist"), envir = environment()) # Export required function to the cores
 
 for(sim in 1:sims){
-  
+
   set.seed(sim)
   
   #----Landscape----
@@ -82,14 +82,23 @@ for(sim in 1:sims){
   # Save landscape to output
   landscape_ALL[[sim]] <- landscape_r
   
+  # # Check n pixels
+  # landscape %>%
+  #   select(x, y) %>%
+  #   filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
+  #   filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim)) %>%
+  #   nrow()
+  
+  # Make ss using aggregated pixels
   ss <- landscape_r %>%
-    aggregate(., fact = 4) %>%
+    aggregate(., fact = 8) %>%
     as.data.frame(., xy=T) %>%
     select(x, y) %>%
     filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
     filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
-  nrow(ss)
   
+  # nrow(ss)
+  # table(diff(ss$x))
   
   #----Activity centers----
   
@@ -344,22 +353,12 @@ ggplot() +
 
 
 #----SAVE DATA FOR MODELS----
+saveRDS(ss,              "output/model_data/ss.RData")
 saveRDS(teldata_raw_ALL, "output/model_data/teldata_raw.RData")
 saveRDS(cost.data_ALL,   "output/model_data/cost_data.RData")
 saveRDS(landscape_ALL,   "output/model_data/landscape.RData")
-saveRDS(tracks_all, file = "output/model_data/tracks_all.RData")  
-
-
-
-
-
-########## DATA FOR MMSCRECO
-
-# teldata = teldata_raw_ALL[[sim_c]], 
-# spatdata = cost.data_ALL[[sim_c]],
-# landscape = landscape_ALL[[sim_c]], # This should be easy
-# scr_y = Y_ALL[[sim_c]] # I'll get this from gps2scr.R
-
+saveRDS(tracks_all,      "output/model_data/tracks_all.RData")  
+saveRDS(traps, file = "output/model_data/traps.RData")
 
 
 
