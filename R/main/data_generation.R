@@ -1,3 +1,6 @@
+# "Move ss lines before loop, adjust trim" IS THE LAST CONFIRMED VERSION
+# # Runs long because stepmax is ~10 instead of ~4.7
+
 library(NLMR)
 library(dplyr)
 library(plotrix)
@@ -47,7 +50,22 @@ autocorr <- 6
 
 # Derived 
 hr95 <- sqrt(5.99) * sigma
-hr95_lim <- (3*sigma) * 1.5 # typically only need 3sig, but adding extra because of scale factor
+hr95_lim <- (3*sigma) * 1.5 # THIS MAY NEED UPDATING
+
+#----GET SS----
+
+# Do this here so we only need to get ss once
+for_ss <- nlm_gaussianfield(
+  ncol = ncol, nrow = nrow, 
+  resolution = rr, autocorr_range = autocorr)
+
+# Make ss using aggregated pixels
+ss <- for_ss %>%
+  aggregate(., fact = 4) %>%
+  as.data.frame(., xy=T) %>%
+  select(x, y) %>%
+  filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
+  filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
 
 
 #----Initialize items to save---
@@ -82,23 +100,13 @@ for(sim in 1:sims){
   # Save landscape to output
   landscape_ALL[[sim]] <- landscape_r
   
-  # # Check n pixels
-  # landscape %>%
+  # # Make ss using aggregated pixels ## Done above
+  # ss <- landscape_r %>%
+  #   aggregate(., fact = 4) %>%
+  #   as.data.frame(., xy=T) %>%
   #   select(x, y) %>%
   #   filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
-  #   filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim)) %>%
-  #   nrow()
-  
-  # Make ss using aggregated pixels
-  ss <- landscape_r %>%
-    aggregate(., fact = 4) %>%
-    as.data.frame(., xy=T) %>%
-    select(x, y) %>%
-    filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
-    filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
-  
-  # nrow(ss)
-  # table(diff(ss$x))
+  #   filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
   
   #----Activity centers----
   
@@ -173,7 +181,9 @@ for(sim in 1:sims){
     sbar <- acs[j,]
     sbar_x <- as.numeric(sbar[1])
     sbar_y <- as.numeric(sbar[2])
-    step_max <- (sqrt(5.99) * sigma_sf) * 1.05 # 1.5x b/c sig_sf
+    #step_max <- ((sqrt(5.99) * sigma) + 3*upsilon) * 1.5###### OLD
+    step_max <- (sqrt(5.99) * sigma_sf) * 1.05 # 1.5x b/c sig_sf NEW
+    
     
     # Subset statespace for local evaluation
     local_ss <- landscape %>%
@@ -302,35 +312,35 @@ for(sim in 1:sims){
   
   
   "COMPILE TELEM"
-  
+
   #----Compile telemetry data----
-  
+
   # Data-collection setup
   cost.data <- list()
   teldata_raw <- list()
-  
+
   # Select k of n simulated individuals
   for(i in 1:N){
-    
+
     # Subset track
     tmp_track <- tracks[[i]][,1:2]
-    
+
     # trimS type buffer
-    trimS <- 3*sigma                       # DOES THIS NEED TO BE LOWER/HIGHER? SF??
-    
+    trimS <- 3*upsilon_sf
+
     # Get extent from track
     tmp_move_ext <- extent(c(min(tmp_track$x)-trimS, max(tmp_track$x)+trimS,
                              min(tmp_track$y)-trimS, max(tmp_track$y)+trimS))
-    
+
     # Crop landscape to extent
     tmp_landscape_crop <- raster::crop(landscape_r, tmp_move_ext)
-    
+
     # Assign individual-specific objects
     teldata_raw[[i]] <- tmp_track
-    cost.data[[i]] <- as.matrix(as.data.frame(tmp_landscape_crop, xy=T))
-    
+    cost.data[[i]] <- as.matrix(raster::as.data.frame(tmp_landscape_crop, xy=T))
+
   }
-  
+
   teldata_raw_ALL[[sim]] <- teldata_raw
   cost.data_ALL[[sim]] <- cost.data
   
