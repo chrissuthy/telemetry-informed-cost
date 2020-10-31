@@ -1,6 +1,3 @@
-# "Move ss lines before loop, adjust trim" IS THE LAST CONFIRMED VERSION
-# # Runs long because stepmax is ~10 instead of ~4.7
-
 library(NLMR)
 library(dplyr)
 library(plotrix)
@@ -99,14 +96,7 @@ for(sim in 1:sims){
   
   # Save landscape to output
   landscape_ALL[[sim]] <- landscape_r
-  
-  # # Make ss using aggregated pixels ## Done above
-  # ss <- landscape_r %>%
-  #   aggregate(., fact = 4) %>%
-  #   as.data.frame(., xy=T) %>%
-  #   select(x, y) %>%
-  #   filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
-  #   filter(y >= (min(y)+hr95_lim) & y < (max(y)-hr95_lim))
+
   
   #----Activity centers----
   
@@ -368,7 +358,7 @@ saveRDS(teldata_raw_ALL, "output/model_data/teldata_raw.RData")
 saveRDS(cost.data_ALL,   "output/model_data/cost_data.RData")
 saveRDS(landscape_ALL,   "output/model_data/landscape.RData")
 saveRDS(tracks_all,      "output/model_data/tracks_all.RData")  
-saveRDS(traps, file = "output/model_data/traps.RData")
+
 
 
 

@@ -235,3 +235,4 @@ for(i in 1:10){
 }
 
 saveRDS(y_ALL, file = "output/model_data/y.RData")
+saveRDS(traps, file = "output/model_data/traps.RData")
