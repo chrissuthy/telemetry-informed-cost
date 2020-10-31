@@ -1,5 +1,4 @@
-# Error in { : 
-#     task 1 failed - "At vector.pmt:442 : cannot reserve space for vector, Out of memory"
+# This only takes 40 seconds! Worth adding to speed up the code!
 
 df <- data.frame(
   slice1 = floor(seq(1, nrow(landscape), length.out = 11))[1:10],
@@ -18,14 +17,14 @@ clusterExport(cl, varlist = c("e2dist"), envir = environment()) # Export require
 
 t0 <- Sys.time()
 dmat <- foreach(j=1:10, .packages = c(.packages())) %dopar% {
-  
-  t02 <- Sys.time()
+
   m <- costDistance(
     tr1Corr,  
     from = landscape %>% select(x,y) %>% slice(df[j,1]:df[j,2]) %>% as.matrix(),
     to = landscape %>% select(x,y) %>% as.matrix())
-  tf2 <- Sys.time()
   
 }
 stopCluster(cl)
 tf <- Sys.time()
+
+dmat <- do.call(rbind, dmat)
