@@ -76,6 +76,9 @@ scr_move_cost_like <- function(
   # Expanding K for later use
   if(length(K)==1) K<- rep(K,nrow(trap_locs)) # Generalized for irregular sampling periods
   
+  ###### DONT I NEED TO SUBSET LANDSCAPE TO SS HERE?!?!?! ########
+  
+  
   G <- coordinates(landscape) # Pixels
   nG <- nrow(G) # Number of pixels
   

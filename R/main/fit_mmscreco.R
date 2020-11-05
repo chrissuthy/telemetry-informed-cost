@@ -1,13 +1,17 @@
+library(gdistance)
 
 "PART 2: FIT MODEL TO SIMULATIONS"
 
 #----LOAD DATA----
 
-teldata   <- readRDS("output/model_data/teldata_raw.RData") # colnames?
-spatdata  <- readRDS("output/model_data/cost_data.RData") # colnames?
+source("R/main/models/scr_move_cost_like.R")
+
+teldata   <- readRDS("output/model_data/teldata_raw.RData") # colnames? # fine
+spatdata  <- readRDS("output/model_data/cost_data.RData") # colnames? # fine
 landscape <- readRDS("output/model_data/landscape.RData") # colnames?
 y         <- readRDS("output/model_data/y.RData")
-traps     <- readRDS("output/model_data/traps.RData") # X Y
+traps     <- readRDS("output/model_data/traps.RData") %>% as.matrix()
+colnames(traps) <- c("X", "Y")
 ss        <- readRDS("output/model_data/ss.RData") # colnames?
 K         <- 90
 
@@ -15,7 +19,7 @@ K         <- 90
 #----Model fitting----
 
 # Number of model fits
-nfits <- 10
+nfits <- 1
 
 # Parallel setup
 ncores = detectCores()-1 # Number of available cores -1 to leave for computer
@@ -35,6 +39,7 @@ results <- foreach(sim=1:nfits, .packages = c(.packages())) %dopar% {
   
   "SCR+TELEM"
   
+  t1 <- Sys.time()
   # NLM likelihood evaluation
   mm <- nlm(scr_move_cost_like, mod = "gauss",
             c(0, 0, 0, 0, 0, 0), hessian = T,
@@ -43,6 +48,7 @@ results <- foreach(sim=1:nfits, .packages = c(.packages())) %dopar% {
             landscape = landscape[[sim]],
             K = K, scr_y = y[[sim]], trap_locs = traps,
             dist = "lcp", popcost=T, popmove=T, fixcost=F, use.sbar=T, prj=NULL)
+  t2 <- Sys.time()
   
   # Back-transform estimates
   est <- mm$estimate
