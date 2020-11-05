@@ -17,7 +17,7 @@ clusterExport(cl, varlist = c("e2dist"), envir = environment()) # Export require
 
 t0 <- Sys.time()
 dmat <- foreach(j=1:10, .packages = c(.packages())) %dopar% {
-
+  
   m <- costDistance(
     tr1Corr,  
     from = landscape %>% select(x,y) %>% slice(df[j,1]:df[j,2]) %>% as.matrix(),

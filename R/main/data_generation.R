@@ -83,7 +83,7 @@ registerDoParallel(cl)
 clusterExport(cl, varlist = c("e2dist"), envir = environment()) # Export required function to the cores
 
 for(sim in 1:sims){
-
+  
   set.seed(sim)
   
   #----Landscape----
@@ -96,7 +96,7 @@ for(sim in 1:sims){
   
   # Save landscape to output
   landscape_ALL[[sim]] <- landscape_r
-
+  
   
   #----Activity centers----
   
@@ -302,35 +302,35 @@ for(sim in 1:sims){
   
   
   "COMPILE TELEM"
-
+  
   #----Compile telemetry data----
-
+  
   # Data-collection setup
   cost.data <- list()
   teldata_raw <- list()
-
+  
   # Select k of n simulated individuals
   for(i in 1:N){
-
+    
     # Subset track
     tmp_track <- tracks[[i]][,1:2]
-
+    
     # trimS type buffer
     trimS <- 3*upsilon_sf
-
+    
     # Get extent from track
     tmp_move_ext <- extent(c(min(tmp_track$x)-trimS, max(tmp_track$x)+trimS,
                              min(tmp_track$y)-trimS, max(tmp_track$y)+trimS))
-
+    
     # Crop landscape to extent
     tmp_landscape_crop <- raster::crop(landscape_r, tmp_move_ext)
-
+    
     # Assign individual-specific objects
     teldata_raw[[i]] <- tmp_track
     cost.data[[i]] <- as.matrix(raster::as.data.frame(tmp_landscape_crop, xy=T))
-
+    
   }
-
+  
   teldata_raw_ALL[[sim]] <- teldata_raw
   cost.data_ALL[[sim]] <- cost.data
   
@@ -358,7 +358,6 @@ saveRDS(teldata_raw_ALL, "output/model_data/teldata_raw.RData")
 saveRDS(cost.data_ALL,   "output/model_data/cost_data.RData")
 saveRDS(landscape_ALL,   "output/model_data/landscape.RData")
 saveRDS(tracks_all,      "output/model_data/tracks_all.RData")  
-
 
 
 
