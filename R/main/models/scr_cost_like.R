@@ -74,11 +74,11 @@ scr_cost_like <- function(
   # Expanding K for later use
   if(length(K)==1) K<- rep(K,nrow(trap_locs)) # Generalized for irregular sampling periods
   
-  G <- coordinates(landscape) # Pixels
+  G <- coordinates(scr_ss) # Pixels ###### NOV4 CHANGED THIS TO SCR_SS INSTEAD OF LANDSCAPE!!!
   nG <- nrow(G) # Number of pixels
   
   # Cost distance pieces
-  cost <- exp(a2_scr*landscape) # Cost surface w/ proposed parameter
+  cost <- exp(a2_scr*scr_ss) # Cost surface w/ proposed parameter
   tr1 <- transition(cost,transitionFunction=function(x) 1/mean(x),directions=8)
   tr1CorrC <- geoCorrection(tr1,type="c",multpl=FALSE,scl=FALSE)
   D <- costDistance(tr1CorrC,trap_locs,G) # Cost distance
@@ -92,6 +92,10 @@ scr_cost_like <- function(
   # Encounter historiess, augemented with 0 row
   # to estimate probability of an uncaptured individual
   # being in one of those pixels
+  if(!is.na(dim(scr_y)[3])){
+    scr_y <- apply(scr_y, 1:2, sum)
+  }
+  
   ymat <- rbind(scr_y,rep(0,ncol(scr_y)))
   
   # Loop through encounter histories (inidividuals + extra)
