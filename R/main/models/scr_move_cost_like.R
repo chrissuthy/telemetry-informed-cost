@@ -7,7 +7,7 @@ scr_move_cost_like <- function(
   
   # Debugging
   # browser()
-  write.table("x", file = "nlm_progress/update.txt")
+  # write.table("x", file = "nlm_progress/update.txt")
   
   #alpha2: cost parameter
   #upsilon: spatial scale (steps)
@@ -82,7 +82,7 @@ scr_move_cost_like <- function(
   nG <- nrow(G) # Number of pixels
   
   # Cost distance pieces
-  cost <- exp(a2_scr*scr_ss) # Cost surface w/ proposed parameter
+  cost <- exp(a2_scr*landscape) # Cost surface w/ proposed parameter
   tr1 <- transition(cost,transitionFunction=function(x) 1/mean(x),directions=8)
   tr1CorrC <- geoCorrection(tr1,type="c",multpl=FALSE,scl=FALSE)
   D <- costDistance(tr1CorrC,trap_locs,G) # Cost distance
@@ -124,37 +124,53 @@ scr_move_cost_like <- function(
   #loop over individuals
   ll <- numeric(nguys)
   for(ind in 1:nguys){
-    cost <- spatdata[[ind]][,3:(2+np),drop=FALSE] %*% c(alpha2[ind,])
-    r.cost <- raster::rasterFromXYZ(cbind(spatdata[[ind]][,1:2],exp(cost))) #, crs = prj)
-    ss <- sp::coordinates(r.cost)
-    colnames(ss) <- c("X","Y")
-    tracks <- as.matrix(teldata[[ind]])
-    colnames(tracks) <- c("X","Y")
-    pixels <- raster::extract(r.cost, tracks, cellnumbers = TRUE)[,1]
+    
+    ss <- spatdata[[ind]][,1:2] # SPATDATA AS COORDINATES OF RASTER (still the bigger box)
+    
+    tel.locs <- as.matrix(teldata[[ind]])
+    pixels <- raster::extract(cost, tel.locs, cellnumbers=T)[,1]
     moved <- 1 - as.numeric(diff(pixels) == 0)
     
+    #cost <- spatdata[[ind]][,3:(2+np),drop=FALSE] %*% c(alpha2[ind,])
+    #r.cost <- raster::rasterFromXYZ(cbind(spatdata[[ind]][,1:2],exp(cost))) #, crs = prj)
+    #ss <- sp::coordinates(r.cost)
+    #colnames(ss) <- c("X","Y")
+    #tracks <- as.matrix(teldata[[ind]])
+    #colnames(tracks) <- c("X","Y")
+    #pixels <- raster::extract(cost, tracks, cellnumbers = TRUE)[,1]
+    #moved <- 1 - as.numeric(diff(pixels) == 0)
+    
     if(!fixcost){
-      tr1 <- gdistance::transition(r.cost, transitionFunction = function(x) 1/mean(x), directions=16)
-      tr1CorrC <- gdistance::geoCorrection(tr1, type="c", multpl=FALSE, scl=FALSE)
-      tel.locs <- ss[pixels,]
-      sbar <- as.vector(colMeans(tel.locs))
+      
+      #tr1 <- gdistance::transition(r.cost, transitionFunction = function(x) 1/mean(x), directions=16)
+      #tr1CorrC <- gdistance::geoCorrection(tr1, type="c", multpl=FALSE, scl=FALSE)
+      
+      #tel.locs <- ss[pixels,]
+      #tel.locs <- tracks
+      #sbar <- as.vector(colMeans(tel.locs)) # FEED IT SBAR, ITS DATA NOW
+      
       if(dist=="circ"){
         D <- as.matrix(gdistance::commuteDistance(tr1CorrC, ss[1:(nrow(ss)-1),]))
         D <- D/ncell(cost)
         D <- D[pixels,]
       }
       if(dist=="lcp"){
-        D <- gdistance::costDistance(tr1CorrC,  tel.locs, ss)
+        D_ss <- gdistance::costDistance(tr1CorrC,  ss, ss)
+        D <- D_ss[pixels,]
       }
     }else{
-      tel.locs <- ss[pixels,]
+      #tel.locs <- ss[pixels,]
+      #tel.locs <- tracks
       D <- oSCR::e2dist(tel.locs, ss)
     }
     
     if(use.sbar){
-      dsbar <- sqrt((sbar[1]-ss[ ,1])^2  + (sbar[2] - ss[ ,2])^2)
+      
+      dsbar <- D_ss[which(spatdata[[ind]][,3] == 1),]
+
+      #dsbar <- sqrt((sbar[1]-ss[ ,1])^2  + (sbar[2] - ss[ ,2])^2)
       dsbar <- matrix(dsbar, nrow=nrow(D), ncol=length(dsbar), byrow=TRUE)
-      dsbar <- dsbar[,1:ncol(D)]
+      #dsbar <- dsbar[,1:ncol(D)]
       if(mod=="gauss"){
         kern<- exp(-D*D/(2*upsilon[ind]*upsilon[ind]) - dsbar*dsbar/(2*sigma*sigma))
       }
