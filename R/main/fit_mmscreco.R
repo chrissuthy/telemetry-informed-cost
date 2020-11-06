@@ -16,6 +16,13 @@ ss        <- readRDS("output/model_data/ss.RData") # colnames?
 K         <- 90
 
 
+### MAKE SCR SS ### # This isn't used right now though.
+scr_ss <- list()
+for(i in 1:length(landscape)){
+  scr_ss[[i]] <- crop(landscape[[i]], extent(ss))
+}
+
+
 #----Model fitting----
 
 # Number of model fits
@@ -42,13 +49,15 @@ results <- foreach(sim=1:nfits, .packages = c(.packages())) %dopar% {
   t1 <- Sys.time()
   # NLM likelihood evaluation
   mm <- nlm(scr_move_cost_like, mod = "gauss",
-            c(0, 0, 0, 0, 0, 0), hessian = T,
+            c(2.1, log(4.1), qlogis(0.2), log(51/10000), log(1.1), qlogis(0.99)), hessian = T,
             teldata   = teldata[[sim]], 
             spatdata  = spatdata[[sim]],
             landscape = landscape[[sim]],
+            scr_ss = scr_ss[[sim]],
             K = K, scr_y = y[[sim]], trap_locs = traps,
             dist = "lcp", popcost=T, popmove=T, fixcost=F, use.sbar=T, prj=NULL)
   t2 <- Sys.time()
+  t2-t1
   
   # Back-transform estimates
   est <- mm$estimate

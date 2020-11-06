@@ -65,7 +65,7 @@ for_ss <- nlm_gaussianfield(
 
 # Make ss using aggregated pixels
 ss <- for_ss %>%
-  aggregate(., fact = 4) %>%
+  #aggregate(., fact = 4) %>% THIS IS NO GOOD!! NOT USED, DIFFFERENT RES, AND MESSES UP TRAPS etc!!
   as.data.frame(., xy=T) %>%
   select(x, y) %>%
   filter(x >= (min(x)+hr95_lim) & x < (max(x)-hr95_lim)) %>%
