@@ -1,10 +1,11 @@
 scr_cost_like <- function(
   param, dist=c("euc","circ","lcp")[3], 
-  scr_y = NULL, K = NULL, trap_locs = NULL, landscape = NULL,
+  scr_ss = NULL, scr_y = NULL, K = NULL, trap_locs = NULL, landscape = NULL,
   mod=c("exp","gauss")[2], prj = NULL){
   
   # Debugging
   # browser()
+  write.table("x", file = "nlm_progress/update_noMove.txt")
   
   #alpha2: cost parameter
   #sigma: spatial scale (range)
