@@ -35,12 +35,12 @@ t1 <- Sys.time()
 # NLM likelihood evaluation
 mmscreco <- nlm(
   scr_move_cost_like, mod = "gauss",
-  c(2.1,            # alpha2 
-    log(4.1),       # sigma 
+  c(3,            # alpha2 
+    log(4),       # sigma 
     qlogis(0.2),    # p0 
-    log(51/10000),  # d0 
-    log(1.1),       # upsilon   
-    qlogis(0.99)),  # psi   
+    log(70/10000),  # d0 
+    log(1),       # upsilon   
+    qlogis(0.8)),  # psi   
   hessian = T,
   teldata   = teldata[[sim]], 
   spatdata  = spatdata[[sim]],
