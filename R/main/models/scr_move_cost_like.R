@@ -6,8 +6,8 @@ scr_move_cost_like <- function(
    mod=c("exp","gauss")[2], prj = NULL){
   
   # Debugging
-  # browser()
-  # write.table("x", file = "nlm_progress/update.txt")
+   browser()
+  write.table("x", file = "nlm_progress/update.txt")
   
   #alpha2: cost parameter
   #upsilon: spatial scale (steps)
@@ -128,7 +128,7 @@ scr_move_cost_like <- function(
     ss <- spatdata[[ind]][,1:2] # SPATDATA AS COORDINATES OF RASTER (still the bigger box)
     
     tel.locs <- as.matrix(teldata[[ind]])
-    pixels <- raster::extract(cost, tel.locs, cellnumbers=T)[,1]
+    pixels <- raster::extract(rasterFromXYZ(cbind(ss, z=1)), tel.locs, cellnumbers=T)[,1]
     moved <- 1 - as.numeric(diff(pixels) == 0)
     
     #cost <- spatdata[[ind]][,3:(2+np),drop=FALSE] %*% c(alpha2[ind,])
@@ -137,7 +137,7 @@ scr_move_cost_like <- function(
     #colnames(ss) <- c("X","Y")
     #tracks <- as.matrix(teldata[[ind]])
     #colnames(tracks) <- c("X","Y")
-    #pixels <- raster::extract(cost, tracks, cellnumbers = TRUE)[,1]
+    #pixels <- raster::extract(r.cost, tracks, cellnumbers = TRUE)[,1]
     #moved <- 1 - as.numeric(diff(pixels) == 0)
     
     if(!fixcost){
