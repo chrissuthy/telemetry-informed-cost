@@ -73,5 +73,5 @@ screco <- nlm(
   dist = "lcp")
 
 t4 <- Sys.time()
-t_screco <- t3-t4
+t_screco <- t4-t3
 
