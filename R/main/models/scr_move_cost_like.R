@@ -6,7 +6,7 @@ scr_move_cost_like <- function(
    mod=c("exp","gauss")[2], prj = NULL){
   
   # Debugging
-   browser()
+  # browser()
   write.table("x", file = "nlm_progress/update.txt")
   
   #alpha2: cost parameter

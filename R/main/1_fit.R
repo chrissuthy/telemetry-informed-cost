@@ -92,7 +92,7 @@ mmscreco <- nlm(
     log(50/ncell(scr_ss[[1]])) # d0
     ),
   mod = "gauss",
-  hessian = T,
+  hessian = T, print.level = 2,
   teldata   = teldata[[sim]][inds], 
   spatdata  = spatdata[[sim]][inds],
   landscape = landscape[[sim]],
@@ -103,6 +103,8 @@ mmscreco <- nlm(
 t2 <- Sys.time()
 t_mmscreco <- t2-t1
 
+
+beepr::beep()
 
 #----Fit model w/o movement----
 
