@@ -7,7 +7,7 @@ scr_move_cost_like <- function(
   
   # Debugging
   # browser()
-  write.table("x", file = "nlm_progress/update.txt")
+  # write.table("x", file = "nlm_progress/update.txt")
   
   #alpha2: cost parameter
   #upsilon: spatial scale (steps)

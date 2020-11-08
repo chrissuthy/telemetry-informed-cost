@@ -12,6 +12,15 @@ mutate = dplyr::mutate
 #### THINNING ####
 prob_thin <- 0.1
 
+
+#----Load Data---
+# Landscape
+landscape_r <- readRDS("output/model_data/landscape.RData")[[1]] # colnames?
+# State-space
+ss <- readRDS("output/model_data/ss.RData")
+# tracks
+tracks_all <- readRDS("output/model_data/tracks_all.RData")
+
 #----Make the traps----
 
 # Movement model
@@ -20,25 +29,6 @@ sigma <- 1  #4.3
 
 # SCR
 N <- 50
-
-# Statespace
-# ncol <- nrow <- 137 #125 for 3sig move buffer, ups=0.25, sig=1
-# rr <- upsilon # Do we still want to make this 0.5*ups?
-autocorr <- 6
-
-# Derived 
-hr95 <- sqrt(5.99) * sigma
-hr95_lim <- (3*sigma) * 1.5 # typically only need 3sig, but adding extra because of scale factor
-
-# Landscape
-landscape0 <- nlm_gaussianfield(
-  ncol = ncol, nrow = nrow, 
-  resolution = rr, autocorr_range = autocorr)
-landscape_r <- landscape0^2
-landscape <- as.data.frame(landscape_r, xy=T)
-
-# State-space
-ss <- readRDS("output/model_data/ss.RData")
 
 # Trap array (space)
 trap_array <- ss %>%
@@ -61,22 +51,24 @@ table(diff(traps$y))
 
 nrow(traps)
 plot(landscape_r)
+lines(extent(ss))
 points(traps)
+lines(extent(traps))
 
 #----Raw movement data----
 
 # Get the tracks object
-tracks <- readRDS("output/oct27_N50_alpha2of2_psi09_sigupsSF.RData")
+tracks <- tracks_all
 
 # Make thihs into a full df
 df <- tracks %>%
   do.call(rbind, .) %>%
-  mutate(sim = rep(1:10, each = 90*24*50))
+  mutate(sim = rep(1:100, each = 90*24*50))
 
 # Plot
 par(mfrow = c(2,5), pty = "s")
 for(i in 1:10){
-  plot(landscape0)
+  plot(landscape_r)
   lines(y~x, data = df[df$sim==i,], col = alpha("red", 0.3))
   points(traps, pch = 20) 
 }
@@ -167,7 +159,7 @@ caps_total  <- c()
 caps_2traps <- c()
 caps_3traps <- c()
 caps_4traps <- c()
-for(i in 1:10){
+for(i in 1:100){
   
   tmp_y0 <- y[i,,,]
   
@@ -225,7 +217,7 @@ par(mfrow=c(1,1))
 
 # Collapse to captured
 y_ALL <- list()
-for(i in 1:10){
+for(i in 1:100){
   
   # Reduce to captured
   tmp_y <- y[i,,,]

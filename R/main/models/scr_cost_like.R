@@ -5,7 +5,7 @@ scr_cost_like <- function(
   
   # Debugging
   # browser()
-  write.table("x", file = "nlm_progress/update_noMove.txt")
+  # write.table("x", file = "nlm_progress/update_noMove.txt")
   
   #alpha2: cost parameter
   #sigma: spatial scale (range)

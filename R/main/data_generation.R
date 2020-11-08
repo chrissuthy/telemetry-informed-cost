@@ -24,7 +24,7 @@ ref.Dmat_i <- function(from, to, local_ss_r, Dmat_i){
 
 # Manual settings
 nfix = 90*24
-sims = 10
+sims = 100
 
 # Cost
 alpha2 <- 2
@@ -353,11 +353,11 @@ ggplot() +
 
 
 #----SAVE DATA FOR MODELS----
+saveRDS(landscape_ALL,   "output/model_data/landscape.RData")
 saveRDS(ss,              "output/model_data/ss.RData")
 saveRDS(teldata_raw_ALL, "output/model_data/teldata_raw.RData")
+saveRDS(tracks_all,      "output/model_data/tracks_all.RData") 
 saveRDS(cost.data_ALL,   "output/model_data/cost_data.RData")
-saveRDS(landscape_ALL,   "output/model_data/landscape.RData")
-saveRDS(tracks_all,      "output/model_data/tracks_all.RData")  
 
 
 
