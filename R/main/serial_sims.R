@@ -71,20 +71,31 @@ inds <- c(26, 41, 15, 16, 4)
 source("R/main/models/scr_move_cost_like.R")
 
 # Number of sims
-sims <- length(y)
+#sims <- length(y)
+sims_start <- 1
+sims_end <- 10
+sims_all <- seq(sims_start, sims_end, by = 1)
+nsims <- length(sims_all)
 
-out <- matrix(NA, nrow = sims, ncol = 6)
+out <- matrix(NA, nrow = nsims, ncol = 6)
 colnames(out) <- c("alpha2", "upsilon", "psi", "sig", "p0", "d0")
+results <- list()
 
-# Parallel setup
-ncores = detectCores() # Number of available cores -1 to leave for computer
-cl = makeCluster(ncores) # Make the cluster with that many cores
-registerDoParallel(cl)  
+# # Parallel setup
+# ncores = detectCores() # Number of available cores -1 to leave for computer
+# cl = makeCluster(ncores) # Make the cluster with that many cores
+# registerDoParallel(cl)  
 
 # Cluster!
 t0 <- Sys.time()
-results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
-
+#results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
+for(i in 1:length(sims_all)){
+  
+  sim <- sims_all[i]
+  
+  set.seed(sim)
+  
+  
   # NLM likelihood evaluation
   mmscreco <- nlm(
     scr_move_cost_like,
@@ -118,20 +129,23 @@ results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
   final[5] <- plogis(est[5])
   final[6] <- exp(est[6])
   
+  results[[i]] <- final
+  
   # Output
-  final
+  # final
   
 }
-stopCluster(cl)
+# stopCluster(cl)
 tf <- Sys.time()
 t_total <- tf-t0
 
 # FINAL OUTPUT AS MATRIX
-out[1:ncell(out)] <- matrix(unlist(results), nrow=sims, byrow=T)
+out[1:ncell(out)] <- matrix(unlist(results), nrow=nsims, byrow=T)
 
 # SAVE IT ALL
-saveRDS(results, "output/mm_out/results.RData")
-file <- paste0("output/mm_out/mmscreco_results.txt")
+file <- paste0("output/mm_out/results_", sims_start, "_", sims_end, ".RData")
+saveRDS(results, file)
+file <- paste0("output/mm_out/mmscreco_results_", sims_start, "_", sims_end, ".txt")
 write.table(out, file)
 
 
