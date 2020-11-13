@@ -107,7 +107,7 @@ for(i in 1:length(sims_all)){
       log(50/ncell(scr_ss[[1]])) # d0
     ),
     mod = "gauss",
-    hessian = T, #print.level = 2,
+    hessian = F, #print.level = 2,
     teldata   = teldata[[sim]][inds],
     spatdata  = spatdata[[sim]][inds],
     landscape = landscape[[sim]],
