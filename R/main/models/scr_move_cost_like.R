@@ -83,7 +83,7 @@ scr_move_cost_like <- function(
   
   # Cost distance pieces
   cost <- exp(a2_scr*landscape) # Cost surface w/ proposed parameter
-  tr1 <- transition(cost,transitionFunction=function(x) 1/mean(x),directions=8)
+  tr1 <- transition(cost,transitionFunction=function(x) 1/mean(x),directions=16)
   tr1CorrC <- geoCorrection(tr1,type="c",multpl=FALSE,scl=FALSE)
   D <- costDistance(tr1CorrC,trap_locs,G) # Cost distance
   

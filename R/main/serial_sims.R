@@ -63,7 +63,7 @@ for(sim in 1:length(spatdata_old)){
 
 #----Number of tagged individuals----
 
-inds <- c(26, 41, 15, 16, 4)
+inds <- 1:5
 
 
 #----Fit movement model----
