@@ -28,7 +28,7 @@ upsilon <- 0.25 #0.6
 sigma <- 1  #4.3
 
 # SCR
-N <- 50
+N <- 100
 
 # Trap array (space)
 trap_array <- ss %>%
@@ -63,7 +63,7 @@ tracks <- tracks_all
 # Make thihs into a full df
 df <- tracks %>%
   do.call(rbind, .) %>%
-  mutate(sim = rep(1:100, each = 90*24*50))
+  mutate(sim = rep(1:100, each = 90*24*N))
 
 # Plot
 par(mfrow = c(2,5), pty = "s")
@@ -115,13 +115,13 @@ tracks_w_traps <- fixes_pxs %>%
   # Keep only unique rows 
   distinct() %>%
   as.data.frame() %>%
-  sample_frac(1) #                                   THINNING!
+  sample_frac(1)
 
 # I DONT THINK THE THINNING IS WORKING RIGHT
 
 # Make a big df of all possible options (to fill in missing data)
 tofill_df <- expand.grid(
-  id = 1:50,    # 50 individuals
+  id = 1:N,    # 50 individuals
   trap = 1:100, # 100 traps
   K = 1:90,     # 90 days
   sim = 1,      # There will always be 1:10 sims anyway

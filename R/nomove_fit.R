@@ -1,6 +1,6 @@
 library(gdistance)
 library(dplyr)
-
+select = dplyr::select
 
 #----Load data----
 
@@ -61,12 +61,12 @@ for(sim in 1:length(spatdata_old)){
 
 #----Number of tagged individuals----
 
-inds <- sample(1:length(teldata[[1]]), size = 8)
+#inds <- sample(1:length(teldata[[1]]), size = 8)
 
 
 #----Fit movement model----
 
-source("R/main/models/scr_cost_like.R")
+source("R/models/scr_cost_like.R")
 
 out <- matrix(NA, nrow = sim, ncol = 4)
 colnames(out) <- c("alpha2", "sig", "p0", "d0")
@@ -86,10 +86,10 @@ results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
   # NLM likelihood evaluation
   screco <- nlm(
     scr_cost_like, mod = "gauss",
-    c(2,                         # alpha2
-      log(4),                    # sigma
+    c(1,                         # alpha2
+      log(2.5),                 # sigma
       qlogis(0.1),               # p0
-      log(50/ncell(scr_ss[[1]])) # d0
+      log(100/ncell(scr_ss[[1]])) # d0
     ),
     hessian = T,
     landscape = landscape[[sim]],
