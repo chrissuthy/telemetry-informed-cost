@@ -27,18 +27,18 @@ nfix = 90*24
 sims = 100
 
 # Cost
-alpha2 <- 2
+alpha2 <- 1
 
 # Movement model
 psi <- 0.9
-scale_factor_cost <- 4 # For scaling sigma later
-upsilon <- 0.25 #0.6
+scale_factor_cost <- 2.5
+upsilon <- 0.25
 upsilon_sf <- upsilon * scale_factor_cost
-sigma <- 1  #4.3
+sigma <- 1
 sigma_sf <- sigma * scale_factor_cost
 
 # SCR
-N <- 50
+N <- 100
 
 # Statespace
 ncol <- nrow <- 137 #125 for 3sig move buffer, ups=0.25, sig=1
@@ -349,7 +349,8 @@ ggplot() +
   scale_color_viridis("Individual", option="C") +
   geom_point(data=as.data.frame(acs), aes(x=x, y=y),
              fill = "black", color="white", pch = 21) +
-  coord_equal() + theme_minimal()
+  coord_equal() + theme_minimal() +
+  theme(legend.position = "none")
 
 
 #----SAVE DATA FOR MODELS----
