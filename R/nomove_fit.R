@@ -5,7 +5,7 @@ select = dplyr::select
 #----Load data----
 
 teldata   <- readRDS("output/model_data/teldata_raw.RData") # colnames? # fine
-spatdata_old  <- readRDS("output/model_data/cost_data.RData") # colnames? # fine
+#spatdata_old  <- readRDS("output/model_data/cost_data.RData") # colnames? # fine
 landscape <- readRDS("output/model_data/landscape.RData") # colnames?
 y         <- readRDS("output/model_data/y.RData")
 traps     <- readRDS("output/model_data/traps.RData") %>% as.matrix()
@@ -21,41 +21,6 @@ for(i in 1:length(landscape)){
   
   scr_ss[[i]] <- crop(landscape[[i]], extent(ss)) %>%
     raster::aggregate(fact = 4)
-}
-
-
-# Re-construct spatdata
-spatdata <- list()
-for(sim in 1:length(spatdata_old)){
-  
-  spatdata[[sim]] <- list()
-  for(ind in 1:length(spatdata_old[[sim]])){
-    
-    tmp_df <- spatdata_old[[sim]][[ind]] %>%
-      as.data.frame()
-    
-    sbar <- tmp_df %>%
-      select(x, y) %>%
-      colMeans() %>%
-      as.numeric() %>%
-      matrix(ncol = 2)
-    
-    tmp_r <- raster::rasterFromXYZ(tmp_df)
-    
-    sbar_indx <- raster::extract(x = tmp_r, y = sbar, cellnumbers=T)[,1]
-    sbar_on_r <- tmp_df[sbar_indx,c("x", "y")]
-    
-    tmp_result <- tmp_df %>%
-      select(x,y) %>%
-      mutate(sbar = ifelse(
-        (x == sbar_on_r[,1]) & (y == sbar_on_r[,2]),
-        1,0)) %>%
-      as.matrix()
-    
-    spatdata[[sim]][[ind]] <- tmp_result
-    
-  }
-  
 }
 
 

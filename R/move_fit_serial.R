@@ -4,9 +4,6 @@ library(dplyr)
 
 #----Load data----
 
-#spatdata_old  <- readRDS("output/model_data/cost_data.RData") # colnames? # fine
-spatdata_old <- readRDS(file.choose())
-
 teldata   <- readRDS("output/model_data/teldata_raw.RData") # colnames? # fine
 landscape <- readRDS("output/model_data/landscape.RData") # colnames?
 y         <- readRDS("output/model_data/y.RData")
@@ -23,41 +20,6 @@ for(i in 1:length(landscape)){
   
   scr_ss[[i]] <- crop(landscape[[i]], extent(ss)) %>%
     raster::aggregate(fact = 4)
-}
-
-
-# Re-construct spatdata
-spatdata <- list()
-for(sim in 1:length(spatdata_old)){
-  
-  spatdata[[sim]] <- list()
-  for(ind in 1:length(spatdata_old[[sim]])){
-    
-    tmp_df <- spatdata_old[[sim]][[ind]] %>%
-      as.data.frame()
-    
-    sbar <- tmp_df %>%
-      select(x, y) %>%
-      colMeans() %>%
-      as.numeric() %>%
-      matrix(ncol = 2)
-    
-    tmp_r <- raster::rasterFromXYZ(tmp_df)
-    
-    sbar_indx <- raster::extract(x = tmp_r, y = sbar, cellnumbers=T)[,1]
-    sbar_on_r <- tmp_df[sbar_indx,c("x", "y")]
-    
-    tmp_result <- tmp_df %>%
-      select(x,y) %>%
-      mutate(sbar = ifelse(
-        (x == sbar_on_r[,1]) & (y == sbar_on_r[,2]),
-        1,0)) %>%
-      as.matrix()
-    
-    spatdata[[sim]][[ind]] <- tmp_result
-    
-  }
-  
 }
 
 
@@ -93,23 +55,26 @@ for(i in 1:length(sims_all)){
   
   sim <- sims_all[i]
   
+  file <- paste0(getwd(), "/output/model_data/cost_data_light/cost_data_", sim, ".RData")
+  spatdata <- readRDS(file)
+  
   set.seed(sim)
   
   
   # NLM likelihood evaluation
   mmscreco <- nlm(
     scr_move_cost_like,
-    c(2,                         # alpha2
-      log(1),                    # ups
+    c(1,                         # alpha2
+      log(0.625),                # ups
       qlogis(0.9),               # psi
-      log(4),                    # sig
+      log(2.5),                  # sig
       qlogis(0.1),               # p0
-      log(50/ncell(scr_ss[[1]])) # d0
+      log(100/ncell(scr_ss[[1]])) # d0
     ),
     mod = "gauss",
     hessian = F, #print.level = 2,
     teldata   = teldata[[sim]][inds],
-    spatdata  = spatdata[[sim]][inds],
+    spatdata  = spatdata[inds],
     landscape = landscape[[sim]],
     scr_ss = scr_ss[[sim]],
     K = K, scr_y = y[[sim]], trap_locs = traps,

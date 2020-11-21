@@ -5,7 +5,7 @@ library(dplyr)
 #----Load data----
 
 #spatdata_old  <- readRDS("output/model_data/cost_data.RData") # colnames? # fine
-spatdata_old <- readRDS(file.choose())
+#spatdata_old <- readRDS(file.choose())
 
 teldata   <- readRDS("output/model_data/teldata_raw.RData") # colnames? # fine
 landscape <- readRDS("output/model_data/landscape.RData") # colnames?
@@ -26,49 +26,14 @@ for(i in 1:length(landscape)){
 }
 
 
-# Re-construct spatdata
-spatdata <- list()
-for(sim in 1:length(spatdata_old)){
-  
-  spatdata[[sim]] <- list()
-  for(ind in 1:length(spatdata_old[[sim]])){
-    
-    tmp_df <- spatdata_old[[sim]][[ind]] %>%
-      as.data.frame()
-    
-    sbar <- tmp_df %>%
-      select(x, y) %>%
-      colMeans() %>%
-      as.numeric() %>%
-      matrix(ncol = 2)
-    
-    tmp_r <- raster::rasterFromXYZ(tmp_df)
-    
-    sbar_indx <- raster::extract(x = tmp_r, y = sbar, cellnumbers=T)[,1]
-    sbar_on_r <- tmp_df[sbar_indx,c("x", "y")]
-    
-    tmp_result <- tmp_df %>%
-      select(x,y) %>%
-      mutate(sbar = ifelse(
-        (x == sbar_on_r[,1]) & (y == sbar_on_r[,2]),
-        1,0)) %>%
-      as.matrix()
-    
-    spatdata[[sim]][[ind]] <- tmp_result
-    
-  }
-  
-}
-
-
 #----Number of tagged individuals----
 
-inds <- c(26, 41, 15, 16, 4)
+inds <- 1:3
 
 
 #----Fit movement model----
 
-source("R/main/models/scr_move_cost_like.R")
+source("R/models/scr_move_cost_like.R")
 
 # Number of sims
 sims <- length(y)
@@ -84,31 +49,34 @@ registerDoParallel(cl)
 # Cluster!
 t0 <- Sys.time()
 results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
+  
+  file <- paste0(getwd(), "/output/model_data/cost_data_light/cost_data_", sim, ".RData")
+  spatdata <- readRDS(file)
 
   # NLM likelihood evaluation
   mmscreco <- nlm(
     scr_move_cost_like,
-    c(2,                         # alpha2
-      log(1),                    # ups
+    c(1,                         # alpha2
+      log(2.5*0.25),             # ups
       qlogis(0.9),               # psi
-      log(4),                    # sig
+      log(2.5*1),                # sig
       qlogis(0.1),               # p0
-      log(50/ncell(scr_ss[[1]])) # d0
+      log(100/ncell(scr_ss[[1]])) # d0
     ),
     mod = "gauss",
-    hessian = T, #print.level = 2,
+    hessian = F, print.level = 2,
     teldata   = teldata[[sim]][inds],
-    spatdata  = spatdata[[sim]][inds],
+    spatdata  = spatdata[inds],
     landscape = landscape[[sim]],
     scr_ss = scr_ss[[sim]],
     K = K, scr_y = y[[sim]], trap_locs = traps,
     dist = "lcp", popcost=T, popmove=T, fixcost=F, use.sbar=T, prj=NULL)
 
   est <- mmscreco$estimate
-  
+
   file <- paste0("output/mm_out/mmscreco_", sim, ".txt")
   write.table(est, file)
-  
+
   # Back-transform point estimates
   final <- c()
   final[1] <- est[1]
@@ -117,7 +85,7 @@ results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
   final[4] <- exp(est[4])
   final[5] <- plogis(est[5])
   final[6] <- exp(est[6])
-  
+
   # Output
   final
   
