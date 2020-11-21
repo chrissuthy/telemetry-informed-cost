@@ -1,5 +1,6 @@
 library(gdistance)
 library(dplyr)
+library(doParallel)
 
 
 #----Load data----
@@ -28,7 +29,7 @@ for(i in 1:length(landscape)){
 
 #----Number of tagged individuals----
 
-inds <- 1:3
+inds <- 1
 
 
 #----Fit movement model----
