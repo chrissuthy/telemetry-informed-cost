@@ -167,7 +167,7 @@ results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
   mmscreco <- nlm(
     scr_move_cost_like,
     p,
-    mod = "gauss", share_sigma = share_sig, iterlim = 1,
+    mod = "gauss", share_sigma = share_sig,
     hessian = F, #print.level = 2,
     teldata   = teldata[[sim]][inds],
     spatdata  = spatdata[inds],

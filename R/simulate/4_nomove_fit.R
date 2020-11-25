@@ -87,7 +87,7 @@ results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
       qlogis(0.1),               # p0
       log(100/ncell(scr_ss[[1]])) # d0
     ),
-    hessian = T,
+    hessian = F,
     landscape = landscape[[sim]],
     scr_ss = scr_ss[[sim]],
     K = K, scr_y = y[[sim]], trap_locs = traps,
