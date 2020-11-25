@@ -64,11 +64,12 @@ for(i in 1:length(landscape)){
 
 source("R/likelihoods/scr_cost_like.R")
 
-out <- matrix(NA, nrow = sim, ncol = 4)
-colnames(out) <- c("alpha2", "sig", "p0", "d0")
-
 # Number of sims
 sims <- length(y)
+
+# Data-collection
+out <- matrix(NA, nrow = sim, ncol = 4)
+colnames(out) <- c("alpha2", "sig", "p0", "d0")
 
 # Parallel setup
 ncores = detectCores()-1 # Number of available cores -1 to leave for computer
