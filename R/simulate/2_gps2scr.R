@@ -6,7 +6,7 @@
 # # # # # # # # # # # # # # #
 
 # Right here:
-select_ups  <- c("small ups", "big ups")[NULL]
+select_ups  <- c("small ups", "big ups")[2]
 
 # # # # # # # # # # # # # # #
 #                           #
@@ -41,13 +41,12 @@ file <- paste0("output/", select_ups, "/model_data/ss.RData")
 ss <- readRDS(file)
 
 # tracks
-file <- paste0("output/small ups/model_data/tracks_all.RData")
+file <- paste0("output/", select_ups, "/model_data/tracks_all.RData")
 tracks_all <- readRDS(file)
 
 #----Make the traps----
 
 # Movement model
-upsilon <- 0.25 #0.6
 sigma <- 1  #4.3
 
 # SCR
@@ -137,8 +136,7 @@ tracks_w_traps <- fixes_pxs %>%
   summarise(caps = n()) %>%
   # Keep only unique rows 
   distinct() %>%
-  as.data.frame() %>%
-  sample_frac(1)
+  as.data.frame()
 
 # I DONT THINK THE THINNING IS WORKING RIGHT
 

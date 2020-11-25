@@ -6,7 +6,7 @@
 # # # # # # # # # # # # # # #
 
 # Right here:
-select_ups  <- c("small ups", "big ups")[NULL]
+select_ups  <- c("small ups", "big ups")[2]
 
 # # # # # # # # # # # # # # #
 #                           #

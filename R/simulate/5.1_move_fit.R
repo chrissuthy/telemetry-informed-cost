@@ -6,7 +6,7 @@
           # # # # # # # # # # # # # # #
 
 # Right here:
-select_ups  <- c("small ups", "big ups")[NULL]
+select_ups  <- c("small ups", "big ups")[2]
 select_ntel <- c(1, 3, 5)[NULL]
 share_sig   <- c(TRUE, FALSE)[NULL]
 

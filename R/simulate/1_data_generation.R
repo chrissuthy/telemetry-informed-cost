@@ -6,7 +6,7 @@
 # # # # # # # # # # # # # # #
 
 # Right here:
-select_ups  <- c("small ups", "big ups")[NULL]
+select_ups  <- c("small ups", "big ups")[2]
 
 # # # # # # # # # # # # # # #
 #                           #
@@ -60,7 +60,8 @@ N <- 100
 
 # Statespace
 ncol <- nrow <- 137 #125 for 3sig move buffer, ups=0.25, sig=1
-rr <- upsilon # Actually, could this even by 2 ups? since ups_sf = ups*4
+#rr <- upsilon # Actually, could this even by 2 ups? since ups_sf = ups*4
+rr <- 0.25
 autocorr <- 6
 
 # Derived 
@@ -312,7 +313,7 @@ for(sim in 1:sims){
     ungroup()
   
   write.table(
-    telemetered_df, 
+    telemetered_df,
     file = paste0("output/", select_ups, "/simout/sim", sim, ".txt")
   )
   
