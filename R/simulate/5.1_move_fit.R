@@ -28,31 +28,31 @@ library(doParallel)
 
 # Create that directory
 file_id <- paste0("est_ntel=", select_ntel, "_", "share=", share_sig)
-new_dir <- paste0("output/", select_ups, "/", file_id)
+new_dir <- paste0("./output/", select_ups, "/", file_id)
 if(!dir.exists(new_dir)){dir.create(new_dir)}
 
 
 #----Load data----
 
 # Telemetry data
-file      <- paste0("output/", select_ups, "/model_data/teldata_raw.RData")
+file      <- paste0("./output/", select_ups, "/model_data/teldata_raw.RData")
 teldata   <- readRDS(file)
 
 # Landscape
-file      <- paste0("output/", select_ups, "/model_data/landscape.RData")
+file      <- paste0("./output/", select_ups, "/model_data/landscape.RData")
 landscape <- readRDS(file)
 
 # Y array
-file      <- paste0("output/", select_ups, "/model_data/y.RData")
+file      <- paste0("./output/", select_ups, "/model_data/y.RData")
 y         <- readRDS(file)
 
 # Traps
-file      <- paste0("output/", select_ups, "/model_data/traps.RData")
+file      <- paste0("./output/", select_ups, "/model_data/traps.RData")
 traps     <- readRDS(file) %>% as.matrix()
 colnames(traps) <- c("X", "Y")
 
 # SS
-file      <- paste0("output/", select_ups, "/model_data/ss.RData")
+file      <- paste0("./output/", select_ups, "/model_data/ss.RData")
 ss        <- readRDS(file) # colnames?
 
 # Sampling occasions
@@ -149,7 +149,7 @@ if(select_ups == "small ups"){
 
 #----Fit movement model----
 
-source("R/likelihoods/scr_move_cost_like_SigmaFlag.R")
+source("./R/likelihoods/scr_move_cost_like_SigmaFlag.R")
 
 # Parallel setup
 ncores = detectCores() # Number of available cores -1 to leave for computer
@@ -178,7 +178,7 @@ results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
 
   est <- mmscreco$estimate
 
-  file <- paste0("output/", select_ups, "/", file_id, "/mmscreco_", sim, ".txt")
+  file <- paste0("./output/", select_ups, "/", file_id, "/mmscreco_", sim, ".txt")
   write.table(est, file)
 
   # Back-transform point estimates
@@ -204,9 +204,9 @@ t_total <- tf-t0
 out[1:ncell(out)] <- matrix(unlist(results), nrow=sims, byrow=T)
 
 # SAVE IT ALL
-file <- paste0("output/", select_ups, "/", file_id, "/results.RData")
+file <- paste0("./output/", select_ups, "/", file_id, "/results.RData")
 saveRDS(results, file)
-file <- paste0("output/", select_ups, "/", file_id, "/results.txt")
+file <- paste0("./output/", select_ups, "/", file_id, "/results.txt")
 write.table(out, file)
 
 

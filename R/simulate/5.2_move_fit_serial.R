@@ -35,31 +35,31 @@ library(dplyr)
 
 # Create that directory
 file_id <- paste0("est_ntel=", select_ntel, "_", "share=", share_sig)
-new_dir <- paste0("output/", select_ups, "/", file_id)
+new_dir <- paste0("./output/", select_ups, "/", file_id)
 if(!dir.exists(new_dir)){dir.create(new_dir)}
 
 
 #----Load data----
 
 # Telemetry data
-file1     <- paste0("output/", select_ups, "/model_data/teldata_raw.RData")
+file1     <- paste0("./output/", select_ups, "/model_data/teldata_raw.RData")
 teldata   <- readRDS(file1)
 
 # Landscape
-file2     <- paste0("output/", select_ups, "/model_data/landscape.RData")
+file2     <- paste0("./output/", select_ups, "/model_data/landscape.RData")
 landscape <- readRDS(file2)
 
 # Y array
-file3     <- paste0("output/", select_ups, "/model_data/y.RData")
+file3     <- paste0("./output/", select_ups, "/model_data/y.RData")
 y         <- readRDS(file3)
 
 # Traps
-file4     <- paste0("output/", select_ups, "/model_data/traps.RData")
+file4     <- paste0("./output/", select_ups, "/model_data/traps.RData")
 traps     <- readRDS(file4) %>% as.matrix()
 colnames(traps) <- c("X", "Y")
 
 # SS
-file5     <- paste0("output/", select_ups, "/model_data/ss.RData")
+file5     <- paste0("./output/", select_ups, "/model_data/ss.RData")
 ss        <- readRDS(file5) # colnames?
 
 # Sampling occasions
@@ -153,7 +153,7 @@ if(select_ups == "small ups"){
 
 #----Fit movement model----
 
-source("R/likelihoods/scr_move_cost_like_SigmaFlag.R")
+source("./R/likelihoods/scr_move_cost_like_SigmaFlag.R")
 
 results <- list()
 
@@ -182,7 +182,7 @@ for(i in 1:length(sims_all)){
   
   est <- mmscreco$estimate
   
-  file <- paste0("output/", select_ups, "/", file_id, "/mmscreco_", sim, ".txt")
+  file <- paste0("./output/", select_ups, "/", file_id, "/mmscreco_", sim, ".txt")
   write.table(est, file)
   
   # Back-transform point estimates
@@ -207,8 +207,8 @@ t_total <- tf-t0
 out[1:ncell(out)] <- matrix(unlist(results), nrow=nsims, byrow=T)
 
 # SAVE IT ALL
-file <- paste0("output/", select_ups, "/", file_id, "/results_", sims_start, "_", sims_end, ".RData")
+file <- paste0("./output/", select_ups, "/", file_id, "/results_", sims_start, "_", sims_end, ".RData")
 saveRDS(results, file)
-file <- paste0("output/", select_ups, "/", file_id, "/results_", sims_start, "_", sims_end, ".txt")
+file <- paste0("./output/", select_ups, "/", file_id, "/results_", sims_start, "_", sims_end, ".txt")
 write.table(out, file)
 
