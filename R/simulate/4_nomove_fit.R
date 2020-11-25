@@ -68,7 +68,7 @@ source("R/likelihoods/scr_cost_like.R")
 sims <- length(y)
 
 # Data-collection
-out <- matrix(NA, nrow = sim, ncol = 4)
+out <- matrix(NA, nrow = sims, ncol = 4)
 colnames(out) <- c("alpha2", "sig", "p0", "d0")
 
 # Parallel setup
