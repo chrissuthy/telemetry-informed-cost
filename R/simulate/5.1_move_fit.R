@@ -7,8 +7,8 @@
 
 # Right here:
 select_ups  <- c("small ups", "big ups")[2]
-select_ntel <- c(1, 3, 5)[NULL]
-share_sig   <- c(TRUE, FALSE)[NULL]
+select_ntel <- c(1, 3, 5)[1]
+share_sig   <- c(TRUE, FALSE)[2]
 
           # # # # # # # # # # # # # # #
           #                           #
@@ -189,7 +189,8 @@ results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
   final[4] <- exp(est[4])
   final[5] <- plogis(est[5])
   final[6] <- exp(est[6])
-  final[7] <- ifelse(share_sig == TRUE, NA, exp(est[7]))
+  
+  if(share_sig == FALSE){final[7] <- exp(est[7])}
 
   # Output
   final

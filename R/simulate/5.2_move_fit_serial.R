@@ -193,7 +193,8 @@ for(i in 1:length(sims_all)){
   final[4] <- exp(est[4])
   final[5] <- plogis(est[5])
   final[6] <- exp(est[6])
-  final[7] <- ifelse(share_sig == TRUE, NA, exp(est[7]))
+  
+  if(share_sig == FALSE){final[7] <- exp(est[7])}
   
   # Output
   results[[i]] <- final
