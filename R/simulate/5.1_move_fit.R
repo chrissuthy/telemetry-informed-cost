@@ -8,7 +8,7 @@
 # Right here:
 select_ups  <- c("small ups", "big ups")[2]
 select_ntel <- c(1, 3, 5)[1]
-share_sig   <- c(TRUE, FALSE)[2]
+share_sig   <- c(TRUE, FALSE)[1]
 
           # # # # # # # # # # # # # # #
           #                           #
@@ -168,7 +168,7 @@ results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
     scr_move_cost_like,
     p,
     mod = "gauss", share_sigma = share_sig,
-    hessian = F, print.level = 2,
+    hessian = F, #print.level = 2,
     teldata   = teldata[[sim]][inds],
     spatdata  = spatdata[inds],
     landscape = landscape[[sim]],
