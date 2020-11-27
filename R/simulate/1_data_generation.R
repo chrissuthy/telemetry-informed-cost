@@ -51,7 +51,9 @@ psi <- 0.9
 scale_factor_cost <- 2.5
 sigma <- 1
 sigma_sf <- sigma * scale_factor_cost
-upsilon <- ifelse(select_ups == "small ups", 0.25, sigma)
+small_ups <- 0.25
+small_ups_sf <- small_ups*scale_factor_cost
+upsilon <- ifelse(select_ups == "small ups", small_ups, sigma)
 upsilon_sf <- upsilon * scale_factor_cost
 
 
@@ -61,7 +63,7 @@ N <- 100
 # Statespace
 ncol <- nrow <- 137 #125 for 3sig move buffer, ups=0.25, sig=1
 #rr <- upsilon # Actually, could this even by 2 ups? since ups_sf = ups*4
-rr <- 0.25
+rr <- small_ups
 autocorr <- 6
 
 # Derived 
@@ -335,7 +337,7 @@ for(sim in 1:sims){
     tmp_track <- tracks[[i]][,1:2]
     
     # trimS type buffer
-    trimS <- 3*upsilon_sf
+    trimS <- 3*small_ups_sf
     
     # Get extent from track
     tmp_move_ext <- extent(c(min(tmp_track$x)-trimS, max(tmp_track$x)+trimS,
