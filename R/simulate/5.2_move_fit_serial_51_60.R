@@ -1,27 +1,34 @@
-          # # # # # # # # # # # # # # #
-          #                           #
-          #  ____HEY!!_DO THIS!!____  #
-          #     Parameterize sims     #
-          #                           #
-          # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # #
+#                           #
+#  ____HEY!!_DO THIS!!____  #
+#     Parameterize sims     #
+#                           #
+# # # # # # # # # # # # # # #
 
 # Right here:
 select_ups  <- c("small ups", "big ups")[2]
-select_ntel <- c(1, 3, 5)[1]
-share_sig   <- c(TRUE, FALSE)[1]
+select_ntel <- c(1, 3, 5)[3]
+share_sig   <- c(TRUE, FALSE)[2]
 
-          # # # # # # # # # # # # # # #
-          #                           #
-          #       GREAT, THANKS!      #
-          #                           #
-          # # # # # # # # # # # # # # #
+# Break it up:
+sims_start <- 51
+sims_end <- 60
+sims_all <- seq(sims_start, sims_end, by = 1)
+nsims <- length(sims_all)
+
+# WRITING TO DROPBOX? SHOULD FIT IN THE LAST LINES OF THIS SCRIPT.
+
+# # # # # # # # # # # # # # #
+#                           #
+#       GREAT, THANKS!      #
+#                           #
+# # # # # # # # # # # # # # #
 
 
 #----Get started----
 
 library(gdistance)
 library(dplyr)
-library(doParallel)
 
 
 #----Directory setup----
@@ -35,25 +42,25 @@ if(!dir.exists(new_dir)){dir.create(new_dir)}
 #----Load data----
 
 # Telemetry data
-file      <- paste0("./output/", select_ups, "/model_data/teldata_raw.RData")
-teldata   <- readRDS(file)
+file1     <- paste0("./output/", select_ups, "/model_data/teldata_raw.RData")
+teldata   <- readRDS(file1)
 
 # Landscape
-file      <- paste0("./output/", select_ups, "/model_data/landscape.RData")
-landscape <- readRDS(file)
+file2     <- paste0("./output/", select_ups, "/model_data/landscape.RData")
+landscape <- readRDS(file2)
 
 # Y array
-file      <- paste0("./output/", select_ups, "/model_data/y.RData")
-y         <- readRDS(file)
+file3     <- paste0("./output/", select_ups, "/model_data/y.RData")
+y         <- readRDS(file3)
 
 # Traps
-file      <- paste0("./output/", select_ups, "/model_data/traps.RData")
-traps     <- readRDS(file) %>% as.matrix()
+file4     <- paste0("./output/", select_ups, "/model_data/traps.RData")
+traps     <- readRDS(file4) %>% as.matrix()
 colnames(traps) <- c("X", "Y")
 
 # SS
-file      <- paste0("./output/", select_ups, "/model_data/ss.RData")
-ss        <- readRDS(file) # colnames?
+file5     <- paste0("./output/", select_ups, "/model_data/ss.RData")
+ss        <- readRDS(file5) # colnames?
 
 # Sampling occasions
 K         <- 90
@@ -76,9 +83,6 @@ inds <- 1:select_ntel
 
 #----Items for fitting movememt model----
 
-# Number of sims
-sims <- length(y)
-
 # Additionals
 if(select_ups == "small ups"){
   
@@ -92,7 +96,7 @@ if(select_ups == "small ups"){
            log(100/ncell(scr_ss[[1]])) # d0
     )
     
-    out <- matrix(NA, nrow = sims, ncol = 6)
+    out <- matrix(NA, nrow = nsims, ncol = 6)
     colnames(out) <- c("alpha2", "upsilon", "psi", "sig", "p0", "d0")
     
   }else if(share_sig == FALSE){
@@ -106,12 +110,12 @@ if(select_ups == "small ups"){
            log(2.5*1)                   # sig_mm
     )
     
-    out <- matrix(NA, nrow = sims, ncol = 7)
+    out <- matrix(NA, nrow = nsims, ncol = 7)
     colnames(out) <- c("alpha2", "upsilon", "psi", "sig", "p0", "d0", "sig_mm")
   }
   
-
-    
+  
+  
 }else if(select_ups == "big ups"){
   
   if(share_sig == TRUE){
@@ -124,7 +128,7 @@ if(select_ups == "small ups"){
            log(100/ncell(scr_ss[[1]])) # d0
     )
     
-    out <- matrix(NA, nrow = sims, ncol = 6)
+    out <- matrix(NA, nrow = nsims, ncol = 6)
     colnames(out) <- c("alpha2", "upsilon", "psi", "sig", "p0", "d0")
     
   }else if(share_sig == FALSE){
@@ -138,7 +142,7 @@ if(select_ups == "small ups"){
            log(2.5*1)                   # sig_mm
     )
     
-    out <- matrix(NA, nrow = sims, ncol = 7)
+    out <- matrix(NA, nrow = nsims, ncol = 7)
     colnames(out) <- c("alpha2", "upsilon", "psi", "sig", "p0", "d0", "sig_mm")
   }
   
@@ -151,18 +155,18 @@ if(select_ups == "small ups"){
 
 source("./R/likelihoods/scr_move_cost_like_SigmaFlag.R")
 
-# Parallel setup
-ncores = detectCores() # Number of available cores -1 to leave for computer
-cl = makeCluster(ncores) # Make the cluster with that many cores
-registerDoParallel(cl)  
+results <- list()
 
-# Cluster!
 t0 <- Sys.time()
-results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
+for(i in 1:length(sims_all)){
+  
+  sim <- sims_all[i]
+  
+  set.seed(sim)
   
   file <- paste0(getwd(), "/output/", select_ups, "/model_data/cost_data_light/cost_data_", sim, ".RData")
   spatdata <- readRDS(file)
-
+  
   # NLM likelihood evaluation
   mmscreco <- nlm(
     scr_move_cost_like,
@@ -175,12 +179,12 @@ results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
     scr_ss = scr_ss[[sim]],
     K = K, scr_y = y[[sim]], trap_locs = traps,
     dist = "lcp", popcost=T, popmove=T, fixcost=F, use.sbar=T, prj=NULL)
-
+  
   est <- mmscreco$estimate
-
+  
   file <- paste0("./output/", select_ups, "/", file_id, "/mmscreco_", sim, ".txt")
   write.table(est, file)
-
+  
   # Back-transform point estimates
   final <- c()
   final[1] <- est[1]
@@ -191,22 +195,20 @@ results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
   final[6] <- exp(est[6])
   
   if(share_sig == FALSE){final[7] <- exp(est[7])}
-
+  
   # Output
-  final
+  results[[i]] <- final
   
 }
-stopCluster(cl)
 tf <- Sys.time()
 t_total <- tf-t0
 
 # FINAL OUTPUT AS MATRIX
-out[1:ncell(out)] <- matrix(unlist(results), nrow=sims, byrow=T)
+out[1:ncell(out)] <- matrix(unlist(results), nrow=nsims, byrow=T)
 
 # SAVE IT ALL
-file <- paste0("./output/", select_ups, "/", file_id, "/results.RData")
+file <- paste0("./output/", select_ups, "/", file_id, "/results_", sims_start, "_", sims_end, ".RData")
 saveRDS(results, file)
-file <- paste0("./output/", select_ups, "/", file_id, "/results.txt")
+file <- paste0("./output/", select_ups, "/", file_id, "/results_", sims_start, "_", sims_end, ".txt")
 write.table(out, file)
-
 
