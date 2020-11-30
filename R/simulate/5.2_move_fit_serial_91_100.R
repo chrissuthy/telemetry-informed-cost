@@ -8,7 +8,7 @@
 # Right here:
 select_ups  <- c("small ups", "big ups")[2]
 select_ntel <- c(1, 3, 5)[3]
-share_sig   <- c(TRUE, FALSE)[1]
+share_sig   <- c(TRUE, FALSE)[2]
 
 # Break it up:
 sims_start <- 91
