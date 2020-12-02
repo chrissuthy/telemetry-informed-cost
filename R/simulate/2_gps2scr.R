@@ -138,11 +138,9 @@ tracks_w_traps <- fixes_pxs %>%
   distinct() %>%
   as.data.frame()
 
-# I DONT THINK THE THINNING IS WORKING RIGHT
-
 # Make a big df of all possible options (to fill in missing data)
 tofill_df <- expand.grid(
-  id = 1:N,    # 50 individuals
+  id = 1:N,     # 100 individuals
   trap = 1:100, # 100 traps
   K = 1:90,     # 90 days
   sim = 1,      # There will always be 1:10 sims anyway
@@ -162,7 +160,7 @@ cap_hist <- rbind(tracks_w_traps, filler_df)
 
 #----Converting to 4D array----
 
-# Sim 1:10, id 1:50, trap 1:100, K 1:90
+# Sim 1:10, id 1:100, trap 1:100, K 1:90
 y <- acast(cap_hist, sim~id~trap~K, value.var = "caps", fill=0)
 dim(y)
 y[y>0] <- 1
