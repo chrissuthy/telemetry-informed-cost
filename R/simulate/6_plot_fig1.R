@@ -14,14 +14,16 @@ mutate = dplyr::mutate
 #----Load data----
 
 landscape <- readRDS("output/small ups/model_data/landscape.RData")[[1]]
-df.l <- as.data.frame(landscape, xy=T)
 tracks <- readRDS("output/small ups/model_data/tracks_all.RData") 
 traps <- readRDS("output/small ups/model_data/traps.RData")
 track <- tracks %>%
   pluck(1) %>%
   filter(id == 20)
 prob_thin <- 0.1
-  
+landscape <- landscape^2
+cost <- 1  
+landscape <- exp(cost * landscape)
+df.l <- as.data.frame(landscape, xy=T)
 
 #----Pixels for traps----
 
@@ -131,10 +133,10 @@ p1 <- ggplot() +
               xmin = xmin, xmax = xmax,
               ymin = ymin,  ymax = ymax)) +
   geom_tile(data = df.l, aes(x=x, y=y, fill=layer)) +
-  scale_fill_viridis_c("Covariate") +
+  scale_fill_viridis_c("Covariate", direction = -1) +
   coord_equal() +
   theme_minimal() +
-  labs(x=NULL, y=NULL, title = "Surface") +
+  labs(x=NULL, y=NULL, title = "1. Generate cost surface") +
   theme(
     plot.title = element_text(hjust=0.5, face = "bold", size=16),
     axis.text = element_text(size=16),
@@ -148,17 +150,17 @@ p2 <- ggplot() +
             mapping = aes(
               xmin = xmin, xmax = xmax,
               ymin = ymin,  ymax = ymax)) +
-  geom_tile(data = df.l, aes(x=x, y=y), fill = "gray70") +
+  geom_tile(data = df.l, aes(x=x, y=y), fill = "white") +
   new_scale("fill") +
   geom_tile(data = df.l, aes(x=x, y=y, fill=layer)) +
-  scale_fill_viridis_c("Covariate", alpha=0.5) +
+  scale_fill_viridis_c("Covariate", alpha=0.5, direction = -1) +
   geom_path(data=track, aes(x=x, y=y), 
-            color = "white", size=0.5) +
+            color = "white", size=0.8) +
   geom_path(data=track, aes(x=x, y=y), 
-            color = "red", size=0.15) +
+            color = "red", size=0.4) +
   coord_equal() +
   theme_minimal() +
-  labs(x=NULL, y=NULL, title = "Movement track") +
+  labs(x=NULL, y=NULL, title = "2. Simulate movement data") +
   theme(
     plot.title = element_text(hjust=0.5, face = "bold", size=16),
     axis.text = element_text(size=16),
@@ -173,17 +175,17 @@ p3 <- ggplot() +
               xmin = xmin, xmax = xmax,
               ymin = ymin,  ymax = ymax)) +
   geom_tile(data = df.l, aes(x=x, y=y), fill = "white") +
-  geom_path(data=track, aes(x=x, y=y), size=0.15, 
+  geom_path(data=track, aes(x=x, y=y), size=0.5, 
             color = alpha("red", 0.5)) +
   new_scale("color") +
   geom_point(data=traps, pch = 21, color = "black",
              aes(x=x, y=y, size = dets)) +
   geom_point(data=traps, pch = 16,
              aes(x=x, y=y, color = pres, size = dets)) +
-  scale_color_manual(values=c("white", "blue")) +
+  scale_color_manual(values=c("white", "black")) +
   coord_equal() +
   theme_minimal() +
-  labs(x=NULL, y=NULL, title = "SCR data") +
+  labs(x=NULL, y=NULL, title = "3. Collect as SCR data") +
   theme(
     plot.title = element_text(hjust=0.5, face = "bold", size=16),
     axis.text = element_text(size=16),
