@@ -9,7 +9,6 @@ library(reshape2)
 select = dplyr::select
 extract = raster::extract
 mutate = dplyr::mutate
-pluck = tidyr::pl
 
 
 #----Load data----
@@ -87,6 +86,8 @@ cap_hist <- rbind(tracks_w_traps, filler_df)
 
 #----Converting to 4D array----
 
+set.seed(23)
+
 # Sim 1:10, id 1:50, trap 1:100, K 1:90
 y <- acast(cap_hist, id~trap~K, value.var = "caps", fill=0)
 dim(y)
@@ -113,52 +114,78 @@ traps$pres <- factor(traps$pres, levels = c(0, 1))
 
 #----Main figure----
 
+# Landscape outline
+df_rect <- data.frame(
+  xmin = 0,
+  ymin = 0,
+  xmax = max(df.l$x)+0.1,
+  ymax = max(df.l$y)+0.1
+)
+
+
 # Landscape
-p1 <- ggplot(data = df.l, aes(x=x, y=y)) +
-  geom_tile(aes(fill=layer)) +
+p1 <- ggplot() +
+  geom_rect(data = df_rect, 
+            color = "black", size = 2,
+            mapping = aes(
+              xmin = xmin, xmax = xmax,
+              ymin = ymin,  ymax = ymax)) +
+  geom_tile(data = df.l, aes(x=x, y=y, fill=layer)) +
   scale_fill_viridis_c("Covariate") +
   coord_equal() +
   theme_minimal() +
   labs(x=NULL, y=NULL, title = "Surface") +
   theme(
-    plot.title = element_text(hjust=0.5),
+    plot.title = element_text(hjust=0.5, face = "bold", size=16),
     axis.text = element_text(size=16),
     legend.position = "none",
     panel.grid = element_blank())
 
 # Track
-p2 <- ggplot(data = df.l, aes(x=x, y=y)) +
-  geom_tile(fill = "gray70") +
+p2 <- ggplot() +
+  geom_rect(data = df_rect, 
+            color = "black", size = 2,
+            mapping = aes(
+              xmin = xmin, xmax = xmax,
+              ymin = ymin,  ymax = ymax)) +
+  geom_tile(data = df.l, aes(x=x, y=y), fill = "gray70") +
   new_scale("fill") +
-  geom_tile(aes(fill=layer)) +
+  geom_tile(data = df.l, aes(x=x, y=y, fill=layer)) +
   scale_fill_viridis_c("Covariate", alpha=0.5) +
   geom_path(data=track, aes(x=x, y=y), 
-            color = "white", size=0.15) +
+            color = "white", size=0.5) +
+  geom_path(data=track, aes(x=x, y=y), 
+            color = "red", size=0.15) +
   coord_equal() +
   theme_minimal() +
   labs(x=NULL, y=NULL, title = "Movement track") +
   theme(
-    plot.title = element_text(hjust=0.5),
+    plot.title = element_text(hjust=0.5, face = "bold", size=16),
     axis.text = element_text(size=16),
     legend.position = "none",
     panel.grid = element_blank())
 
 # Traps
-p3 <- ggplot(data = df.l, aes(x=x, y=y)) +
-  geom_tile(fill = "gray80") +
-  #geom_tile(aes(fill=layer)) +
-  #scale_fill_viridis_c("Covariate", alpha=0.5) +
+p3 <- ggplot() +
+  geom_rect(data = df_rect, 
+            color = "black", size = 2,
+            mapping = aes(
+              xmin = xmin, xmax = xmax,
+              ymin = ymin,  ymax = ymax)) +
+  geom_tile(data = df.l, aes(x=x, y=y), fill = "white") +
   geom_path(data=track, aes(x=x, y=y), size=0.15, 
-            color = alpha("white", 0.5)) +
+            color = alpha("red", 0.5)) +
   new_scale("color") +
-  geom_point(data=traps, pch = 1,
+  geom_point(data=traps, pch = 21, color = "black",
+             aes(x=x, y=y, size = dets)) +
+  geom_point(data=traps, pch = 16,
              aes(x=x, y=y, color = pres, size = dets)) +
-  scale_color_manual(values=c("gray55", "red")) +
+  scale_color_manual(values=c("white", "blue")) +
   coord_equal() +
   theme_minimal() +
   labs(x=NULL, y=NULL, title = "SCR data") +
   theme(
-    plot.title = element_text(hjust=0.5),
+    plot.title = element_text(hjust=0.5, face = "bold", size=16),
     axis.text = element_text(size=16),
     legend.position = "none",
     panel.grid = element_blank())
