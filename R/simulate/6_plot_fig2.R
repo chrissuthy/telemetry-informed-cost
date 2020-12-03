@@ -51,7 +51,7 @@ p1 <- ggplot() +
             size=0.35) +
   coord_equal() +
   theme_minimal() +
-  labs(x=NULL, y=NULL, title = "High-resolution") +
+  labs(x=NULL, y=NULL, title = expression(upsilon < sigma)) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
     axis.text = element_text(size=12),
@@ -92,7 +92,7 @@ p2 <- ggplot() +
             size=0.35) +
   coord_equal() +
   theme_minimal() +
-  labs(x=NULL, y=NULL, title = "Low-resolution") +
+  labs(x=NULL, y=NULL, title = expression(upsilon == sigma)) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
     axis.text = element_text(size=12),
