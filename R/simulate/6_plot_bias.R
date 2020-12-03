@@ -233,7 +233,7 @@ ggplot(data = results, aes(x = NA, color = Scenario, shape = Scenario)) +
   geom_hline(yintercept = 0, color = "gray40", size = 0.7) +
   
   # Main results
-  geom_pointrange(position = position_dodge(1), size = 0.7,
+  geom_pointrange(position = position_dodge(1.15), size = 0.7,
                   aes(y = trim.mean, ymin = bias_lower, ymax = bias_upper)) +
   
   # Color
@@ -243,7 +243,7 @@ ggplot(data = results, aes(x = NA, color = Scenario, shape = Scenario)) +
   # Ntel text
   geom_text(aes(y = trim.mean, label = ntel), 
             color = "white", size = 2, fontface = "bold",
-            position = position_dodge(1)) +
+            position = position_dodge(1.15)) +
   
   # Facet
   facet_grid(key~Upsilon, 
