@@ -184,124 +184,83 @@ df <- rbind(
   mutate(Upsilon = factor(Upsilon, levels = c("high-res", "low-res")))
 
 
-#----Plot every scenario----
+#----Summarize results----
+
+results0 <- df %>%
+  group_by(key, Scenario, Upsilon, ntel) %>%
+  na.omit() %>%
+  summarise(trim.mean = mean(prbias, trim = 0.1),
+            bias_upper = quantile(prbias, 0.75),
+            bias_lower = quantile(prbias, 0.25))
+
+missing_results <- expand.grid(
+  key = c("cost", "density", "sigma", "sigma_move"),
+  Scenario = c("ntel=3, shared", "ntel=5, unshared"),
+  Upsilon = "low-res",
+  ntel = c(3, 5),
+  trim.mean = NA,
+  bias_upper = NA,
+  bias_lower = NA
+)
+
+
+results <- rbind(results0, missing_results) %>%
+  mutate(key = recode(key,
+    cost = "Cost ~ (alpha)",
+    density = "Density ~ (D)",
+    sigma = "sigma[SCR]",
+    sigma_move = "sigma[MM]")) %>%
+  mutate(Upsilon = recode(Upsilon,
+    `high-res` = "upsilon < sigma",
+    `low-res` = "upsilon == sigma"))
+
+
+#----NEW plot----
 
 # Color palettes
 ibm <- c("#648fff", "#785ef0", "#dc267f")
 pal <- c("black", ibm[1], ibm[1], ibm[2], ibm[2], ibm[3], ibm[3])
 
-# Plots
-ggplot(data=df,  aes(x = key, y = prbias, color = Scenario)) +
-  geom_rect(ymin = -5, ymax = 5, xmin = 0, xmax = 10, 
-            fill = "gray91", color = "gray91") +
-  geom_hline(yintercept = 0, color = "gray40", size = 0.7) +
-  stat_summary(fun.data=ggquant, fun.args = list(int=0.5), lwd=1, na.rm = F,
-               geom="errorbar", position = position_dodge(0.85), width = 0) +
-  stat_summary(fun = meantrim, geom="point", position = position_dodge(0.85), 
-               size=2.0, aes(shape=Scenario), fill = "white", na.rm = F) +
-  scale_color_manual(values = pal) +
-  scale_shape_manual(values = c(15, 21, 19, 21, 19, 21, 19)) +
-  facet_grid(Upsilon~key, scales = "free_x") +
-  theme_minimal() + labs(y = "% Relaive bias", x = NULL) +
-  coord_cartesian(ylim = c(-60, 60)) +
-  scale_x_discrete(labels = c("cost" =  expression("Cost (" * alpha * ")"), 
-                              "density" = expression("Density (" * D * ")"),
-                              "sigma" = expression(sigma[SCR]), 
-                              "sigma_move" = expression(sigma[mm]))) +
-  theme(#aspect.ratio = 1,
-    panel.border = element_rect(fill = NA, color = "gray70", size=1),
-    panel.grid.major = element_line(color = "gray85", size=0.25),
-    panel.grid.minor = element_line(color = "gray85", size=0.25),
-    panel.grid.major.x = element_blank(),
-    strip.text = element_text(color = "gray20"),
-    strip.text.x = element_blank(),
-    strip.text.y = element_text(color = "gray20"),
-    axis.text.x = element_text(angle = 0, size = 12, color = "gray20"),
-    axis.title = element_text(color = "gray20"),
-    legend.text = element_text(color = "gray20"),
-    plot.title = element_blank(),
-    legend.position = "none",
-    text = element_text(size = 14))
+pal <- c("black", ibm[1], ibm[3], ibm[1], ibm[3], ibm[1], ibm[3])
 
 
-
-
-
-
-# Plots
-ggplot(data=df,  aes(x = key, y = prbias, color = Scenario)) +
-  geom_rect(ymin = -5, ymax = 5, xmin = 0, xmax = 10, 
-            fill = "gray91", color = "gray91") +
-  geom_hline(yintercept = 0, color = "gray40", size = 0.7) +
-  stat_summary(fun.data=ggquant, fun.args = list(int=0.5), lwd=1, na.rm = F,
-               geom="errorbar", position = position_dodge(0.85), width = 0) +
-  stat_summary(fun = meantrim, geom="point", position = position_dodge(0.85), 
-               size=3.0, aes(shape=Scenario), fill = "white", na.rm = F) +
-  scale_color_manual(values = pal) +
-  scale_shape_manual(values = c(15, 19, 15, 19, 15, 19, 15)) +
-  new_scale("color") +
-  stat_summary(fun = meantrim, geom="text", aes(label=ntel), color = "white",
-               position = position_dodge(0.85), size=2.5) +
-  facet_grid(Upsilon~key, scales = "free_x") +
-  theme_minimal() + labs(y = "% Relaive bias", x = NULL) +
-  coord_cartesian(ylim = c(-60, 60)) +
-  scale_x_discrete(labels = c("cost" =  expression("Cost (" * alpha * ")"), 
-                              "density" = expression("Density (" * D * ")"),
-                              "sigma" = expression(sigma[SCR]), 
-                              "sigma_move" = expression(sigma[mm]))) +
-  scale_y_continuous(breaks = c(-50, -25, 0, 25, 50)) +
-  theme(aspect.ratio = 1,
-    panel.border = element_rect(fill = NA, color = "gray70", size=1),
-    panel.grid.major = element_line(color = "gray85", size=0.25),
-    panel.grid.minor = element_line(color = "gray85", size=0.25),
-    panel.grid.major.x = element_blank(),
-    strip.text = element_text(color = "gray20"),
-    strip.text.x = element_blank(),
-    strip.text.y = element_text(color = "gray20"),
-    axis.text.x = element_text(angle = 0, size = 12, color = "gray20"),
-    axis.title = element_text(color = "gray20"),
-    legend.text = element_text(color = "gray20"),
-    plot.title = element_blank(),
-    legend.position = "none",
-    text = element_text(size = 14))
+# Plot start
+ggplot(data = results, aes(x = NA, color = Scenario, shape = Scenario)) +
   
-
-
-
-pal <- c("black", ibm[1], ibm[1], ibm[2], ibm[2], ibm[3], ibm[3])
-
-# Plots
-ggplot(data=df,  aes(x = NA, y = prbias, color = Scenario)) +
+  # Bias bar
   geom_rect(ymin = -5, ymax = 5, xmin = 0, xmax = 10, 
             fill = "gray91", color = "gray91") +
   geom_hline(yintercept = 0, color = "gray40", size = 0.7) +
-  stat_summary(fun.data=ggquant, fun.args = list(int=0.5), lwd=1, na.rm = F,
-               geom="errorbar", position = position_dodge(0.85), width = 0) +
-  stat_summary(fun = meantrim, geom="point", position = position_dodge(0.85), 
-               size=3.0, aes(shape=Scenario), fill = "white", na.rm = F) +
+  
+  # Main results
+  geom_pointrange(position = position_dodge(1), size = 0.7,
+                  aes(y = trim.mean, ymin = bias_lower, ymax = bias_upper)) +
+  
+  # Color
   scale_color_manual(values = pal) +
-  scale_shape_manual(values = c(15, 19, 15, 19, 15, 19, 15)) +
-  new_scale("color") +
-  stat_summary(fun = meantrim, geom="text", aes(label=ntel), color = "white",
-               position = position_dodge(0.85), size=2.5) +
-  facet_grid(key~Upsilon, scales = "free") +
-  theme_minimal() + labs(y = "% Relaive bias", x = NULL) +
-  coord_cartesian(ylim = c(-60, 60)) +
+  scale_shape_manual(values = c(17, 19, 15, 19, 15, 19, 15)) +
+  
+  # Ntel text
+  geom_text(aes(y = trim.mean, label = ntel), 
+            color = "white", size = 2, fontface = "bold",
+            position = position_dodge(1)) +
+  
+  # Facet
+  facet_grid(key~Upsilon, 
+             labeller = label_parsed,
+             scales = "free_x") +
+  
+  # Scales
+  coord_cartesian(ylim=c(-60, 60)) +
   scale_y_continuous(breaks = c(-50, -25, 0, 25, 50)) +
-  scale_x_discrete(labels = c(NULL)) +
+  labs(y = "% Relaive bias", x = NULL) +
+  
+  # Theme
+  theme_minimal() +
   theme(aspect.ratio = 1,
-        panel.border = element_rect(fill = NA, color = "gray70", size=1),
-        panel.grid.major = element_line(color = "gray85", size=0.25),
-        panel.grid.minor = element_line(color = "gray85", size=0.25),
-        panel.grid.major.x = element_blank(),
-        strip.text = element_text(color = "gray20"),
-        strip.text.x = element_text(color = "gray20"),
-        strip.text.y = element_text(color = "gray20"),
-        axis.text.x = element_text(angle = 0, size = 12, color = "gray20"),
-        axis.title = element_text(color = "gray20"),
-        legend.text = element_text(color = "gray20"),
-        plot.title = element_blank(),
         legend.position = "none",
-        text = element_text(size = 14))
-
-
+        text = element_text(size = 14),
+        strip.text.y = element_text(angle = 0, hjust = 0),
+        panel.border = element_rect(fill = NA, color = "gray70", size=1),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_blank())

@@ -106,7 +106,8 @@ traps$dets <- as.numeric(scr)
 traps$pres <- 0
 traps$pres[traps$dets > 0] <- 1
 traps$pres <- factor(traps$pres, levels = c(0, 1))
-
+traps$dets2 <- traps$dets
+traps$dets2[traps$dets2 == 0] <- NA
 
 # # Simulate detection data
 # traps$pres <- rbinom(nrow(traps), 1, 0.1)
@@ -169,20 +170,31 @@ p2 <- ggplot() +
 
 # Traps
 p3 <- ggplot() +
+  # White background
   geom_rect(data = df_rect, 
             color = "black", size = 2,
             mapping = aes(
               xmin = xmin, xmax = xmax,
               ymin = ymin,  ymax = ymax)) +
+  # Cost surface
   geom_tile(data = df.l, aes(x=x, y=y), fill = "white") +
+  # Movement track
   geom_path(data=track, aes(x=x, y=y), size=0.5, 
             color = alpha("red", 0.5)) +
+  # SCR traps
   new_scale("color") +
+  # Border
   geom_point(data=traps, pch = 21, color = "black",
              aes(x=x, y=y, size = dets)) +
+  # Fill
   geom_point(data=traps, pch = 16,
              aes(x=x, y=y, color = pres, size = dets)) +
+  # Color
   scale_color_manual(values=c("white", "black")) +
+  # Label SCR traps
+  geom_text(data=traps, aes(x=x, y=y, label = dets2, size = dets2-0.5), 
+            color = "white", fontface="bold") +
+  # Formattting
   coord_equal() +
   theme_minimal() +
   labs(x=NULL, y=NULL, title = "3. Collect as SCR data") +
