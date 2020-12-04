@@ -158,7 +158,7 @@ p2 <- ggplot() +
   geom_path(data=track, aes(x=x, y=y), 
             color = "white", size=0.8) +
   geom_path(data=track, aes(x=x, y=y), 
-            color = "red", size=0.4) +
+            color = "blue", size=0.4) +
   coord_equal() +
   theme_minimal() +
   labs(x=NULL, y=NULL, title = "2. Simulate movement data") +
@@ -180,7 +180,7 @@ p3 <- ggplot() +
   geom_tile(data = df.l, aes(x=x, y=y), fill = "white") +
   # Movement track
   geom_path(data=track, aes(x=x, y=y), size=0.5, 
-            color = alpha("red", 0.5)) +
+            color = alpha("blue", 0.5)) +
   # SCR traps
   new_scale("color") +
   # Border
