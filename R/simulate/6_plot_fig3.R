@@ -135,14 +135,14 @@ bigups_ntel1_shared <- read.table("./output/big ups/est_ntel=1_share=TRUE/result
 bigups_ntel3_unshared <- read.table("./output/big ups/est_ntel=3_share=FALSE/results_PRELIM.txt") %>%
   analyze(., sigma = "unshared", scenario = "ntel=3, unshared", scenario_ups = "low-res", 
           t_ups = 1*2.5, ntel = 3)
-# ntel3_shared <- read.table("./output/big ups/est_ntel=3_share=TRUE/results.txt") %>%
-#   analyze(., sigma = "shared", scenario = "ntel=3, shared", scenario_ups = "low-res", 
-#           t_ups = 1*2.5, ntel = 3)
+bigups_ntel3_shared <- read.table("./output/big ups/est_ntel=3_share=TRUE/results.txt") %>%
+  analyze(., sigma = "shared", scenario = "ntel=3, shared", scenario_ups = "low-res",
+          t_ups = 1*2.5, ntel = 3)
 
 # NTEL = 5
-# ntel5_unshared <- read.table("./output/big ups/est_ntel=5_share=FALSE/results.txt") %>%
-#   analyze(., sigma = "unshared", scenario = "ntel=5, unshared", scenario_ups = "low-res", 
-#           t_ups = 1*2.5, ntel = 5)
+bigups_ntel5_unshared <- read.table("./output/big ups/est_ntel=5_share=FALSE/results.txt") %>%
+  analyze(., sigma = "unshared", scenario = "ntel=5, unshared", scenario_ups = "low-res",
+          t_ups = 1*2.5, ntel = 5)
 bigups_ntel5_shared <- read.table("./output/big ups/est_ntel=5_share=TRUE/results.txt") %>% 
   analyze(., sigma = "shared", scenario = "ntel=5, shared", scenario_ups = "low-res", 
           t_ups = 1*2.5, ntel = 5)
@@ -150,15 +150,15 @@ bigups_ntel5_shared <- read.table("./output/big ups/est_ntel=5_share=TRUE/result
 
 #----Combine data----
 
-missing <- expand.grid(
-  key = c("cost", "density", "sigma", "sigma_move"),
-  value = c(NA),
-  true = c(NA),
-  prbias = c(NA),
-  Scenario = c("ntel=3, shared", "ntel=5, unshared"),
-  Upsilon = "low-res",
-  ntel = c(3, 5)
-)
+# missing <- expand.grid(
+#   key = c("cost", "density", "sigma", "sigma_move"),
+#   value = c(NA),
+#   true = c(NA),
+#   prbias = c(NA),
+#   Scenario = c("ntel=3, shared", "ntel=5, unshared"),
+#   Upsilon = "low-res",
+#   ntel = c(3, 5)
+# )
 
 # Combine
 df <- rbind(
@@ -170,12 +170,12 @@ df <- rbind(
   bigups_ntel1_unshared, 
   bigups_ntel1_shared,
   bigups_ntel3_unshared, 
-  #bigups_ntel3_shared,
-  #bigups_ntel5_unshared, 
+  bigups_ntel3_shared,
+  bigups_ntel5_unshared,
   bigups_ntel5_shared) %>%
   filter(key != "upsilon") %>%
   filter(key != "pr(moved)") %>%
-  rbind(., missing) %>%
+  #rbind(., missing) %>%
   mutate(Scenario = factor(Scenario, 
                            levels = c("No movement", 
                                       "ntel=1, shared", "ntel=1, unshared", 
@@ -188,23 +188,24 @@ df <- rbind(
 
 results0 <- df %>%
   group_by(key, Scenario, Upsilon, ntel) %>%
-  na.omit() %>%
+  #na.omit() %>%
   summarise(trim.mean = mean(prbias, trim = 0.1),
             bias_upper = quantile(prbias, 0.75),
             bias_lower = quantile(prbias, 0.25))
 
-missing_results <- expand.grid(
-  key = c("cost", "density", "sigma", "sigma_move"),
-  Scenario = c("ntel=3, shared", "ntel=5, unshared"),
-  Upsilon = "low-res",
-  ntel = c(3, 5),
-  trim.mean = NA,
-  bias_upper = NA,
-  bias_lower = NA
-)
+# missing_results <- expand.grid(
+#   key = c("cost", "density", "sigma", "sigma_move"),
+#   Scenario = c("ntel=3, shared", "ntel=5, unshared"),
+#   Upsilon = "low-res",
+#   ntel = c(3, 5),
+#   trim.mean = NA,
+#   bias_upper = NA,
+#   bias_lower = NA
+# )
 
 
-results <- rbind(results0, missing_results) %>%
+results <- results0 %>%
+  #rbind(., missing_results) %>%
   mutate(key = recode(key,
     cost = "Cost ~ (alpha)",
     density = "Density ~ (D)",
@@ -226,6 +227,56 @@ pal <- c("black", ibm[1], ibm[3], ibm[1], ibm[3], ibm[1], ibm[3])
 
 # Plot start
 ggplot(data = results, aes(x = NA, color = Scenario, shape = Scenario)) +
+  
+  # Bias bar
+  geom_rect(ymin = -5, ymax = 5, xmin = 0, xmax = 10, 
+            fill = "gray91", color = "gray91") +
+  geom_hline(yintercept = 0, color = "gray40", size = 0.7) +
+  
+  # Main results
+  geom_pointrange(position = position_dodge(1.15), size = 0.7,
+                  aes(y = trim.mean, ymin = bias_lower, ymax = bias_upper)) +
+  
+  # Color
+  scale_color_manual(values = pal) +
+  scale_shape_manual(values = c(17, 19, 15, 19, 15, 19, 15)) +
+  
+  # Ntel text
+  geom_text(aes(y = trim.mean, label = ntel), 
+            color = "white", size = 2, fontface = "bold",
+            position = position_dodge(1.15)) +
+  
+  # Facet
+  facet_grid(key~Upsilon, 
+             labeller = label_parsed,
+             scales = "free_x") +
+  
+  # Scales
+  coord_cartesian(ylim=c(-60, 60)) +
+  scale_y_continuous(breaks = c(-50, -25, 0, 25, 50)) +
+  labs(y = "% Relaive bias", x = NULL) +
+  
+  # Theme
+  theme_minimal() +
+  theme(aspect.ratio = 1,
+        legend.position = "none",
+        text = element_text(size = 14),
+        strip.text.y = element_text(angle = 0, hjust = 0),
+        panel.border = element_rect(fill = NA, color = "gray70", size=1),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_blank())
+
+
+
+
+
+
+
+# Plot start
+ggplot(data = results %>% 
+         filter(key %in% c(expression(Cost ~ (alpha)),
+                           expression(Density ~ (D)))),
+       aes(x = NA, color = Scenario, shape = Scenario)) +
   
   # Bias bar
   geom_rect(ymin = -5, ymax = 5, xmin = 0, xmax = 10, 
