@@ -3,6 +3,8 @@ library(dplyr)
 library(tidyr)
 library(RColorBrewer)
 library(patchwork)
+library(facetscales)
+
 
 #----True Values----
 
@@ -221,61 +223,20 @@ results <- results0 %>%
 # Color palettes
 ibm <- c("#648fff", "#785ef0", "#dc267f")
 pal <- c("black", ibm[1], ibm[1], ibm[2], ibm[2], ibm[3], ibm[3])
-
 pal <- c("black", ibm[1], ibm[3], ibm[1], ibm[3], ibm[1], ibm[3])
 
+# Facet custom scales
+scales_y <- list(
+  "Cost ~ (alpha)" = scale_y_continuous(
+    limits = c(-60,60), breaks = c(-50, -25, 0, 25, 50)),
+  "Density ~ (D)" = scale_y_continuous(
+    limits = c(-15,15), breaks = c(-10, 0, 10)))
 
-# Plot start
-ggplot(data = results, aes(x = NA, color = Scenario, shape = Scenario)) +
-  
-  # Bias bar
-  geom_rect(ymin = -5, ymax = 5, xmin = 0, xmax = 10, 
-            fill = "gray91", color = "gray91") +
-  geom_hline(yintercept = 0, color = "gray40", size = 0.7) +
-  
-  # Main results
-  geom_pointrange(position = position_dodge(1.15), size = 0.7,
-                  aes(y = trim.mean, ymin = bias_lower, ymax = bias_upper)) +
-  
-  # Color
-  scale_color_manual(values = pal) +
-  scale_shape_manual(values = c(17, 19, 15, 19, 15, 19, 15)) +
-  
-  # Ntel text
-  geom_text(aes(y = trim.mean, label = ntel), 
-            color = "white", size = 2, fontface = "bold",
-            position = position_dodge(1.15)) +
-  
-  # Facet
-  facet_grid(key~Upsilon, 
-             labeller = label_parsed,
-             scales = "free_x") +
-  
-  # Scales
-  coord_cartesian(ylim=c(-60, 60)) +
-  scale_y_continuous(breaks = c(-50, -25, 0, 25, 50)) +
-  labs(y = "% Relaive bias", x = NULL) +
-  
-  # Theme
-  theme_minimal() +
-  theme(aspect.ratio = 1,
-        legend.position = "none",
-        text = element_text(size = 14),
-        strip.text.y = element_text(angle = 0, hjust = 0),
-        panel.border = element_rect(fill = NA, color = "gray70", size=1),
-        panel.grid.major.x = element_blank(),
-        axis.text.x = element_blank())
-
-
-
-
-
-
-
-# Plot start
-ggplot(data = results %>% 
-         filter(key %in% c(expression(Cost ~ (alpha)),
-                           expression(Density ~ (D)))),
+# FIGURE
+ggplot(data = results %>%
+         filter(key %in% c(
+           expression(Cost ~ (alpha)),
+           expression(Density ~ (D)))),
        aes(x = NA, color = Scenario, shape = Scenario)) +
   
   # Bias bar
@@ -297,13 +258,12 @@ ggplot(data = results %>%
             position = position_dodge(1.15)) +
   
   # Facet
-  facet_grid(key~Upsilon, 
-             labeller = label_parsed,
-             scales = "free_x") +
+  facet_grid_sc(
+    key~Upsilon,
+    labeller = label_parsed,
+    scales = list(y = scales_y)) +
   
-  # Scales
-  coord_cartesian(ylim=c(-60, 60)) +
-  scale_y_continuous(breaks = c(-50, -25, 0, 25, 50)) +
+  # Labs
   labs(y = "% Relaive bias", x = NULL) +
   
   # Theme
@@ -314,4 +274,5 @@ ggplot(data = results %>%
         strip.text.y = element_text(angle = 0, hjust = 0),
         panel.border = element_rect(fill = NA, color = "gray70", size=1),
         panel.grid.major.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
         axis.text.x = element_blank())
