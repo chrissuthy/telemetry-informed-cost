@@ -167,11 +167,22 @@ spatdata <- list(spatdata_CU803, spatdata_CU818, spatdata_CU905)
 
 source("./R/likelihoods/scr_move_cost_like_SigmaFlag.R")
 
+# Starting values
+p <- c(1,                           # alpha2
+       log(600),                    # ups
+       qlogis(0.5),                 # psi
+       log(4300),                   # sig
+       qlogis(0.05),                # p0
+       log(100/ncell(ss)),          # d0
+       log(4300)                    # sig_mm
+)
+
+
 t0 <- Sys.time()
 # NLM likelihood evaluation
 mm_forest <- nlm(
   scr_move_cost_like,
-  p,
+  p = p,
   mod = "gauss", share_sigma = F,
   hessian = T, print.level = 2,
   teldata   = bears_teldata,
