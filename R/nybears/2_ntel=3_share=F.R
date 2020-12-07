@@ -174,7 +174,7 @@ mm_forest <- nlm(
   p,
   mod = "gauss", share_sigma = F,
   hessian = T, print.level = 2,
-  teldata   = teldata,
+  teldata   = bears_teldata,
   spatdata  = spatdata,
   landscape = forest,
   scr_ss = ss,
