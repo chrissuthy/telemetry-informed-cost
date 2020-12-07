@@ -167,7 +167,7 @@ spatdata <- list(spatdata_CU803, spatdata_CU818, spatdata_CU905)
 
 source("./R/likelihoods/scr_move_cost_like_SigmaFlag.R")
 
-
+t0 <- Sys.time()
 # NLM likelihood evaluation
 mm_forest <- nlm(
   scr_move_cost_like,
@@ -187,6 +187,8 @@ mm_forest <- nlm(
   fixcost=F, 
   use.sbar=T, 
   prj=NULL)
+tf <- Sys.time()
+tf-t0
 
 est <- mm_forest$estimate
 
