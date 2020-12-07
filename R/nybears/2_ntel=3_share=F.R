@@ -158,7 +158,7 @@ tmp_result <- spatdata_base %>%
 spatdata_CU905 <- tmp_result
 
 # FINAL SPATDATA
-spatdata <- list(spatdata_CU803, spatdata_CU818, CU905_sbar)
+spatdata <- list(spatdata_CU803, spatdata_CU818, spatdata_CU905)
 
 
 
