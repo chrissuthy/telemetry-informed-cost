@@ -314,8 +314,9 @@ final[4] <- exp(est[4])
 final[5] <- plogis(est[5])
 final[6] <- exp(est[6])
 final[7] <- exp(est[7])
+
 ASE <- mm_elev$hessian %>% solve %>% diag %>% sqrt
-out <- rbind(final, ASE) %>% as.data.frame() %>% mutate(model = "~elev") %>% select(model, everything())
+out <- rbind(est, ASE) %>% as.data.frame() %>% mutate(model = "~elev") %>% select(model, everything())
 out <- out %>% mutate_if(is.numeric, round, digits = 4)
 rownames(out) <- c("MLE", "SE")
 colnames(out) <- c("model", "cost", "sigma", "psi", "sig_det", "p0", "d0", "sig_ind")
