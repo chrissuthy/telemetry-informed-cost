@@ -28,7 +28,7 @@ NED <- projectRaster(NED, crs=crs(pgon),res=30)
 
 # Separate covariates
 # forest0 <- NLCD %in% 41:43
-elev0 <- NED
+elev0 <- NED/1000
 
 # Shrink axes
 elev_df <- as.data.frame(elev0, xy=T) %>%
@@ -60,7 +60,7 @@ ss <- bears.ss_ext %>%
   rasterFromXYZ()
 
 plot(elev)
-points(ss)
+points(as.data.frame(ss, xy = T))
 
 
 # par(mfrow=c(1,2))
@@ -84,7 +84,7 @@ plot(elev)
 lines(bears.ss_ext)
 points(as.data.frame(ss, xy=T)[,1:2], col = "black", pch = 1)
 points(traps, pch=20, col = "red", cex=2)
-lines(nybears$teldata[,c("X_UTM","Y_UTM")]/1000, col = "blue")
+lines(nybears$teldata[,c("X_UTM","Y_UTM")]/1000, col = "blue", lwd = 2)
 
 # Organize raw teldata
 df0 <- nybears$teldata %>%
@@ -94,7 +94,7 @@ df0 <- nybears$teldata %>%
          X_UTM, Y_UTM)
 
 # Convert continous space fixes to pixel centroids
-fix_cells <- extract(elev, df0[,c("X_UTM","Y_UTM")], cellnumbers=T)[,1]
+fix_cells <- raster::extract(elev, df0[,c("X_UTM","Y_UTM")], cellnumbers=T)[,1]
 fix_cells_xy <- xyFromCell(elev, fix_cells)
 colnames(fix_cells_xy) <- c("x","y")
 df <- cbind(df0, fix_cells_xy)
@@ -259,8 +259,9 @@ par(mfrow=c(1,1))
 # FINAL SPATDATA
 spatdata <- list(spatdata_CU803, spatdata_CU818, spatdata_CU905)
 
-rm(NLCD, pgon, df0, CU803, CU818, CU905, spatdata_base, sbar_indx,
+rm(NED, pgon, df0, CU803, CU818, CU905, spatdata_base, sbar_indx,
    tmp_result, spatdata_CU803, spatdata_CU818, spatdata_CU905,
+   df, elev0, elev_df, elev1,
    CU803_r, CU803_r_df, CU818_r, CU818_r_df, CU905_r, CU905_r_df)
 
 
@@ -313,3 +314,12 @@ final[4] <- exp(est[4])
 final[5] <- plogis(est[5])
 final[6] <- exp(est[6])
 final[7] <- exp(est[7])
+ASE <- mm_elev$hessian %>% solve %>% diag %>% sqrt
+out <- rbind(final, ASE) %>% as.data.frame() %>% mutate(model = "~elev") %>% select(model, everything())
+out <- out %>% mutate_if(is.numeric, round, digits = 4)
+rownames(out) <- c("MLE", "SE")
+colnames(out) <- c("model", "cost", "sigma", "psi", "sig_det", "p0", "d0", "sig_ind")
+out
+write.table(out, "./output/nybears/ntel=3_share=F_MSE_SE_elev.txt")
+
+save.image("./output/nybears/ntel=3_share=F_elev.RData")
