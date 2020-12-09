@@ -302,7 +302,8 @@ mm_forest <- nlm(
 tf <- Sys.time()
 tf-t0
 
-est <- mm_forest$estimate
+est <- mm_forest$estimate[2:7]
+est <- c(NA, est)
 
 # Back-transform point estimates
 final <- c()
@@ -314,7 +315,8 @@ final[5] <- plogis(est[5])
 final[6] <- exp(est[6])
 final[7] <- exp(est[7])
 
-ASE <- mm_forest$hessian %>% solve %>% diag %>% sqrt
+ASE <- mm_forest$hessian[2:7,2:7] %>% solve %>% diag %>% sqrt
+ASE <- c(NA, ASE)
 out <- rbind(est, ASE) %>% as.data.frame() %>% mutate(model = "~dot") %>% select(model, everything())
 out <- out %>% mutate_if(is.numeric, round, digits = 4)
 rownames(out) <- c("MLE", "SE")
