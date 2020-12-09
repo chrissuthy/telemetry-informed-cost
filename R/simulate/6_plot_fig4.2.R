@@ -137,11 +137,14 @@ p1 <- df %>%
   facet_grid(result~surface) +
   scale_fill_viridis(option = "D") + #, limits = c(0, max(cost2_df$z))) +
   theme_void() + coord_equal() +
-  theme(#legend.position = "none",
+  labs(title = "Cost") +
+  theme(legend.position = "none",
         #plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"),
         #plot.background = element_rect(fill = "yellow"),
         strip.text.y = element_blank(),
-        strip.text.x = element_text(face="bold", size=15))
+        strip.text.x = element_blank(),
+        plot.title = element_text(hjust=0.5, face="bold", size=15))
+        #strip.text.x = element_text(face="bold", size=15))
 
 p2 <- df %>%
   filter(surface == "Potential\nconnectivity") %>%
@@ -150,14 +153,21 @@ p2 <- df %>%
   facet_grid(result~surface, labeller = label_parsed) +
   scale_fill_viridis(option = "C") + #, limits = c(0, max(r_cost1.4$z))) +
   theme_void() + coord_equal() +
-  theme(#legend.position = "none",
+  labs(title = "Potential\nconnectivity") +
+  theme(legend.position = "none",
         #plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"),
         #plot.background = element_rect(fill = "yellow"),
         strip.text.y = element_text(face="bold", size=15),
-        strip.text.x = element_text(hjust=0.5, face="bold", size=15),
+        strip.text.x = element_blank(),
+        plot.title = element_text(hjust=0.5, face="bold", size=15),
+        # strip.text.x = element_text(hjust=0.5, face="bold", size=15),
         text = element_text(face="bold"))
 
 
 
 final <- p1+p2
 final
+
+
+
+
