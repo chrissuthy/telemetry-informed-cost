@@ -122,10 +122,10 @@ df <- rbind(
   cost2_df, cost1.4_df) %>%
   mutate(surface = rep(c("Potential\nconnectivity", "Cost"), 
                        each = nrow(cost2_df)*2)) %>%
-  mutate(result = rep(c("SCR[eco]+MM[eco]", "SCR[euc]",
-                        "SCR[eco]+MM[eco]", "SCR[euc]"),
+  mutate(result = rep(c("SCR[eco]+MM[eco]", "SCR[eco]",
+                        "SCR[eco]+MM[eco]", "SCR[eco]"),
                       each = nrow(cost2_df))) %>%
-  mutate(result = factor(result, levels=c("SCR[eco]+MM[eco]","SCR[euc]")))
+  mutate(result = factor(result, levels=c("SCR[eco]+MM[eco]","SCR[eco]")))
 
 
 #----Final plot----
@@ -135,9 +135,9 @@ p1 <- df %>%
   ggplot(data=., aes(x=x,y=y,fill=z)) +
   geom_tile() +
   facet_grid(result~surface) +
-  scale_fill_viridis(option = "D", limits = c(0, max(cost2_df$z))) +
+  scale_fill_viridis(option = "D") + #, limits = c(0, max(cost2_df$z))) +
   theme_void() + coord_equal() +
-  theme(legend.position = "none",
+  theme(#legend.position = "none",
         #plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"),
         #plot.background = element_rect(fill = "yellow"),
         strip.text.y = element_blank(),
@@ -147,14 +147,15 @@ p2 <- df %>%
   filter(surface == "Potential\nconnectivity") %>%
   ggplot(data=., aes(x=x,y=y,fill=z)) +
   geom_tile() +
-  facet_grid(result~surface) +
-  scale_fill_viridis(option = "C", limits = c(0, max(r_cost1.4$z))) +
+  facet_grid(result~surface, labeller = label_parsed) +
+  scale_fill_viridis(option = "C") + #, limits = c(0, max(r_cost1.4$z))) +
   theme_void() + coord_equal() +
-  theme(legend.position = "none",
+  theme(#legend.position = "none",
         #plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"),
         #plot.background = element_rect(fill = "yellow"),
         strip.text.y = element_text(face="bold", size=15),
-        strip.text.x = element_text(hjust=0.5, face="bold", size=15))
+        strip.text.x = element_text(hjust=0.5, face="bold", size=15),
+        text = element_text(face="bold"))
 
 
 
