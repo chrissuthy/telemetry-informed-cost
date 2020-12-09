@@ -157,7 +157,7 @@ p2 <- df %>%
   theme(legend.position = "none",
         #plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"),
         #plot.background = element_rect(fill = "yellow"),
-        strip.text.y = element_text(face="bold", size=15),
+        strip.text.y = element_text(face="bold", size=15, angle = 270),
         strip.text.x = element_blank(),
         plot.title = element_text(hjust=0.5, face="bold", size=15),
         # strip.text.x = element_text(hjust=0.5, face="bold", size=15),
