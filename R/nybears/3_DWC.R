@@ -1,0 +1,63 @@
+library(FedData)
+library(magrittr)
+library(raster)
+library(sf)
+library(ggplot2)
+library(oSCR)
+library(dplyr)
+library(gdistance)
+library(cowplot)
+
+source("R/likelihoods/scr_move_cost_predict.R")
+
+load("output/nybears/ntel=3_share=F_forest.RData")
+
+p <-  mm_forest$estimate
+
+dwc_bears <- scr_move_cost_predict(param = p, mod = "gauss", share_sigma = FALSE, 
+                                   teldata = bears_teldata, spatdata  = spatdata, 
+                                   landscape = forest, scr_ss = ss, K = nybears$K, 
+                                   scr_y = nybears$y2d, trap_locs = traps, dist = "lcp", 
+                                   popcost=TRUE, popmove=TRUE, fixcost=FALSE, use.sbar=TRUE, 
+                                   prj=NULL, predict=TRUE)
+
+r_dens <- data.frame(X=dwc_bears[,1],
+                     Y=dwc_bears[,2],
+                     rd = apply(dwc_bears[,-c(1,2)],1,sum))
+for_df <- data.frame(X = coordinates(forest)[,1],
+                     Y = coordinates(forest)[,2],
+                     forest = values(forest))
+ggplot(r_dens,aes(x=X,y=Y,fill=rd))+
+  geom_raster() +
+  theme_bw() +
+  scale_fill_distiller(direction = 1)
+
+#DWC
+
+cost <- exp(p[1]*forest)
+tr1 <- transition(cost,transitionFunction=function(x) 1/mean(x),directions=16)
+tr1CorrC <- geoCorrection(tr1,type="c",multpl=FALSE,scl=FALSE)
+D <- costDistance(tr1CorrC,coordinates(ss),coordinates(ss)) # Cost distance
+P <- plogis(p[5]) * exp(- D^2/(2*exp(p[4])^2))
+r_dens$dwc <- apply(P*r_dens$rd,2,sum)
+
+
+p0 <- ggplot(for_df,aes(x=X,y=Y,fill=forest))+
+       geom_raster() +
+       theme_bw() +
+       scale_fill_distiller(palette = "Greens",direction = 1) +
+  theme(legend.position="bottom")
+
+p1 <- ggplot(r_dens,aes(x=X,y=Y,fill=rd))+
+       geom_raster() +
+       theme_bw() +
+       scale_fill_distiller(palette = "Blues",direction = 1) +
+       theme(legend.position="bottom")
+
+p2 <- ggplot(r_dens,aes(x=X,y=Y,fill=dwc))+
+       geom_raster() +
+       theme_bw() +
+       scale_fill_distiller(palette = "Reds",direction = 1) +
+  theme(legend.position="bottom")
+
+plot_grid(p0,p1,p2,nrow = 1)
