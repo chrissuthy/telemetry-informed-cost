@@ -34,7 +34,7 @@ y1_summary <- summary.SCR(y1)
 # Analyze small-upsilon scenario
 file <- paste0("./output/", "big ups", "/model_data/y.RData")
 y2 <- readRDS(file)
-y2_summary <- summary.SCR(y1)
+y2_summary <- summary.SCR(y2)
 
 
 # Compile data
