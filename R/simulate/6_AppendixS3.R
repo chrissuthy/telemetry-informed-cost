@@ -58,7 +58,7 @@ ggplot(data = y_summary, aes(x = value, fill = key)) +
   scale_fill_manual(values=c("#003f5c","#bc5090","#ffa600")) +
   theme_minimal() +
   theme(aspect.ratio = 1, 
-        text = element_text(size=16),
+        text = element_text(size=14),
         axis.text.x = element_text(size=10),
         legend.position = "none",
         panel.border = element_rect(fill = NA),
