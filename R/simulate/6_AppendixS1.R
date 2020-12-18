@@ -175,8 +175,8 @@ df <- rbind(
   bigups_ntel3_shared,
   bigups_ntel5_unshared,
   bigups_ntel5_shared) %>%
-  filter(key != "upsilon") %>%
-  filter(key != "pr(moved)") %>%
+  #filter(key != "upsilon") %>%
+  #filter(key != "pr(moved)") %>%
   #rbind(., missing) %>%
   mutate(Scenario = factor(Scenario, 
                            levels = c("No movement", 
@@ -209,74 +209,58 @@ results0 <- df %>%
 results <- results0 %>%
   #rbind(., missing_results) %>%
   mutate(key = recode(key,
-    cost = "Cost ~ (alpha)",
-    density = "Density ~ (D)",
-    sigma = "sigma[SCR]",
-    sigma_move = "sigma[MM]")) %>%
+                      cost = "Cost ~ (alpha)",
+                      density = "Density ~ (D)",
+                      sigma = "sigma[SCR]",
+                      sigma_move = "sigma[MM]")) %>%
   mutate(Upsilon = recode(Upsilon,
-    `high-res` = "upsilon < sigma",
-    `low-res` = "upsilon == sigma"))
+                          `high-res` = "upsilon < sigma",
+                          `low-res` = "upsilon == sigma"))
 
 
-#----NEW plot----
 
-# Color palettes
-ibm <- c("#648fff", "#785ef0", "#dc267f")
-pal <- c("black", ibm[1], ibm[1], ibm[2], ibm[2], ibm[3], ibm[3])
-pal <- c("black", ibm[1], ibm[3], ibm[1], ibm[3], ibm[1], ibm[3])
+#-----Table----
+AppendixS1
+View(AppendixS1)
 
-# Facet custom scales
-scales_y <- list(
-  "Cost ~ (alpha)" = scale_y_continuous(
-    limits = c(-60,60), breaks = c(-50, -25, 0, 25, 50)),
-  "Density ~ (D)" = scale_y_continuous(
-    limits = c(-15,15), breaks = c(-10, 0, 10)))
+AppendixS1 <- results %>%
+  select(key, Scenario, Upsilon, ntel, trim.mean, bias_lower, bias_upper) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  mutate(LU = paste0("(",
+    sprintf("%.2f", bias_lower), ", ",
+    sprintf("%.2f", bias_upper), ")")) %>%
+  select(-bias_lower, -bias_upper) %>%
+  arrange(Upsilon) %>%
+  mutate(key = recode(key,
+                      `Cost ~ (alpha)` = "alpha_1",
+                      `Density ~ (D)` = "d_0",
+                      `sigma[SCR]` = "sigma_{det}'",
+                      `sigma[MM]` = "sigma_{det}''",
+                      `upsilon` = "sigma",
+                      `pr(moved)` = "psi")) %>%
+  mutate(Scenario = recode(Scenario,
+                           `No movement` = "standard",
+                           `ntel=1, shared` = "shared",
+                           `ntel=1, unshared` = "independent",
+                           `ntel=3, shared` = "shared",
+                           `ntel=3, unshared` = "independent",
+                           `ntel=5, shared` = "shared",
+                           `ntel=5, unshared` = "independent")) %>%
+  mutate(formulation = Scenario) %>%
+  mutate(scenario = Upsilon) %>%
+  mutate(scenario = recode(scenario,
+                           `upsilon < sigma` = "small-sigma_{det}",
+                           `upsilon == sigma` = "large-sigma_{det}")) %>%
+  ungroup() %>%
+  select(-Scenario, -Upsilon) %>%
+  select(scenario, 
+         parameter = key, 
+         `sigma_{det}` = formulation, 
+         `n_{tel}` = ntel, 
+         mean = trim.mean, 
+         bounds = LU)
 
-# FIGURE
-ggplot(data = results %>%
-         filter(key %in% c(
-           expression(Cost ~ (alpha)),
-           expression(Density ~ (D)))),
-       aes(x = NA, color = Scenario, shape = Scenario)) +
-  
-  # Bias bar
-  geom_rect(ymin = -5, ymax = 5, xmin = 0, xmax = 10, 
-            fill = "gray91", color = "gray91") +
-  geom_hline(yintercept = 0, color = "gray40", size = 0.7) +
-  
-  # Main results
-  geom_pointrange(position = position_dodge(1.15), size = 0.7,
-                  aes(y = trim.mean, ymin = bias_lower, ymax = bias_upper)) +
-  
-  # Color
-  scale_color_manual(values = pal) +
-  scale_shape_manual(values = c(17, 19, 15, 19, 15, 19, 15)) +
-  
-  # Ntel text
-  geom_text(aes(y = trim.mean, label = ntel), 
-            color = "white", size = 2, fontface = "bold",
-            position = position_dodge(1.15)) +
-  
-  # Facet
-  facet_grid_sc(
-    key~Upsilon,
-    labeller = label_parsed,
-    scales = list(y = scales_y)) +
-  
-  # Labs
-  labs(y = "% Relaive bias", x = NULL) +
-  
-  # Theme
-  theme_minimal() +
-  theme(aspect.ratio = 1,
-        legend.position = "none",
-        text = element_text(size = 14),
-        strip.text.y = element_text(angle = 0, hjust = 0),
-        panel.border = element_rect(fill = NA, color = "gray70", size=1),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        axis.text.x = element_blank())
-
+write.csv(AppendixS1, file = "/Users/gatesdupont/Desktop/AppendixS1.csv")
 
 
 
