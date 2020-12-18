@@ -52,7 +52,7 @@ y_summary <- c(
 
 # Plot
 ggplot(data = y_summary, aes(x = value, fill = key)) +
-  geom_histogram() +
+  geom_histogram(bins = 20) +
   facet_grid(scenario~key, labeller = label_parsed, scales = "free") +
   labs(y="Frequency", x=NULL) +
   scale_fill_manual(values=c("#003f5c","#bc5090","#ffa600")) +
