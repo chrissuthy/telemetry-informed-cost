@@ -192,8 +192,8 @@ results0 <- df %>%
   group_by(key, Scenario, Upsilon, ntel) %>%
   #na.omit() %>%
   summarise(trim.mean = mean(prbias, trim = 0.1),
-            bias_upper = quantile(prbias, 0.75),
-            bias_lower = quantile(prbias, 0.25))
+            bias_upper = quantile(prbias, 0.975),
+            bias_lower = quantile(prbias, 0.025))
 
 # missing_results <- expand.grid(
 #   key = c("cost", "density", "sigma", "sigma_move"),
@@ -220,8 +220,6 @@ results <- results0 %>%
 
 
 #-----Table----
-AppendixS1
-View(AppendixS1)
 
 AppendixS1 <- results %>%
   select(key, Scenario, Upsilon, ntel, trim.mean, bias_lower, bias_upper) %>%
