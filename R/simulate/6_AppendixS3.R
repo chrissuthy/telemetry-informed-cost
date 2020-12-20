@@ -38,7 +38,7 @@ y2_summary <- summary.SCR(y2)
 
 
 # Compile data
-metrics <- c("n[captured]", "n[captured~`>1`~trap]", "mean[captures]")
+metrics <- c("n[captured]", "n[captured~`>1`~trap]", "bar(n[caps. / ind.])")
 y_summary <- c(
   unlist(y1_summary),
   unlist(y2_summary)) %>%
@@ -58,7 +58,8 @@ ggplot(data = y_summary, aes(x = value, fill = key)) +
   scale_fill_manual(values=c("#003f5c","#bc5090","#ffa600")) +
   theme_minimal() +
   theme(aspect.ratio = 1, 
-        text = element_text(size=14),
+        text = element_text(size=15),
+        strip.text = element_text(size = 17),
         axis.text.x = element_text(size=10),
         legend.position = "none",
         panel.border = element_rect(fill = NA),
