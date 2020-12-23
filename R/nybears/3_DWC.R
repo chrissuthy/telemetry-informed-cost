@@ -44,20 +44,29 @@ r_dens$dwc <- apply(P*r_dens$rd,2,sum)
 
 p0 <- ggplot(for_df,aes(x=X,y=Y,fill=forest))+
        geom_raster() +
+       labs(title = "a. Forest", fill=NULL) +
        theme_bw() +
        scale_fill_distiller(palette = "Greens",direction = 1) +
-  theme(legend.position="bottom")
+  theme(legend.position="bottom", aspect.ratio = 1,
+        axis.text = element_text(size=12),
+        plot.title = element_text(hjust=0, face="bold"))
 
 p1 <- ggplot(r_dens,aes(x=X,y=Y,fill=rd))+
        geom_raster() +
+       labs(title = "b. Realized density", fill=NULL) +
        theme_bw() +
        scale_fill_distiller(palette = "Blues",direction = 1) +
-       theme(legend.position="bottom")
+  theme(legend.position="bottom", aspect.ratio = 1,
+        axis.text = element_text(size=12),
+        plot.title = element_text(hjust=0, face="bold"))
 
 p2 <- ggplot(r_dens,aes(x=X,y=Y,fill=dwc))+
        geom_raster() +
+       labs(title = "c. Density-weighted Connevctivity", fill=NULL) +
        theme_bw() +
        scale_fill_distiller(palette = "Reds",direction = 1) +
-  theme(legend.position="bottom")
+  theme(legend.position="bottom", aspect.ratio = 1,
+        axis.text = element_text(size=12),
+        plot.title = element_text(hjust=0, face="bold"))
 
 plot_grid(p0,p1,p2,nrow = 1)
