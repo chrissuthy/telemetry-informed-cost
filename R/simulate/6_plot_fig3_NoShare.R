@@ -195,6 +195,13 @@ results0 <- df %>%
             bias_upper = quantile(prbias, 0.75),
             bias_lower = quantile(prbias, 0.25))
 
+# results0 <- df %>%
+#   group_by(key, Scenario, Upsilon, ntel) %>%
+#   #na.omit() %>%
+#   summarise(trim.mean = mean(prbias, trim = 0.1),
+#             bias_upper = quantile(prbias, 0.975),
+#             bias_lower = quantile(prbias, 0.025))
+
 # missing_results <- expand.grid(
 #   key = c("cost", "density", "sigma", "sigma_move"),
 #   Scenario = c("ntel=3, shared", "ntel=5, unshared"),
