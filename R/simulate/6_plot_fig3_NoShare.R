@@ -209,13 +209,13 @@ results0 <- df %>%
 results <- results0 %>%
   #rbind(., missing_results) %>%
   mutate(key = recode(key,
-    cost = "Cost ~ (alpha)",
-    density = "Density ~ (D)",
-    sigma = "sigma[SCR]",
-    sigma_move = "sigma[MM]")) %>%
+                      cost = "Cost ~ (alpha)",
+                      density = "Density ~ (D)",
+                      sigma = "sigma[SCR]",
+                      sigma_move = "sigma[MM]")) %>%
   mutate(Upsilon = recode(Upsilon,
-    `high-res` = "sigma < sigma[det]",
-    `low-res` = "sigma == sigma[det]"))
+                          `high-res` = "sigma < sigma[det]",
+                          `low-res` = "sigma == sigma[det]"))
 
 
 #----NEW plot----
@@ -223,7 +223,7 @@ results <- results0 %>%
 # Color palettes
 ibm <- c("#648fff", "#785ef0", "#dc267f")
 pal <- c("black", ibm[1], ibm[1], ibm[2], ibm[2], ibm[3], ibm[3])
-pal <- c("black", ibm[1], ibm[3], ibm[1], ibm[3], ibm[1], ibm[3])
+pal <- c("black", ibm[3], ibm[3], ibm[3])
 
 # Facet custom scales
 scales_y <- list(
@@ -234,6 +234,7 @@ scales_y <- list(
 
 # FIGURE
 ggplot(data = results %>%
+         filter(Scenario %in% as.character(unique(results$Scenario)[c(1,3,5,7)])) %>%
          filter(key %in% c(
            expression(Cost ~ (alpha)),
            expression(Density ~ (D)))),
@@ -250,7 +251,7 @@ ggplot(data = results %>%
   
   # Color
   scale_color_manual(values = pal) +
-  scale_shape_manual(values = c(17, 19, 15, 19, 15, 19, 15)) +
+  scale_shape_manual(values = c(17, 15, 15, 15)) +
   
   # Ntel text
   geom_text(aes(y = trim.mean, label = ntel), 

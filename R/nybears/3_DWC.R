@@ -62,7 +62,7 @@ p1 <- ggplot(r_dens,aes(x=X,y=Y,fill=rd))+
 
 p2 <- ggplot(r_dens,aes(x=X,y=Y,fill=dwc))+
        geom_raster() +
-       labs(title = "c. Density-weighted Connevctivity", fill=NULL) +
+       labs(title = "c. Density-weighted Connectivity", fill=NULL) +
        theme_bw() +
        scale_fill_distiller(palette = "Reds",direction = 1) +
   theme(legend.position="bottom", aspect.ratio = 1,

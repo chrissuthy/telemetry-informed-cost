@@ -29,7 +29,7 @@ ggplot()+
   geom_point(data=traps, aes(x=X_UTM, y=Y_UTM), 
              pch=3, color="gray30", stroke=0.7) +
   geom_path(data=tel, aes(x=x1, y=y1, color=id)) +
-  scale_color_manual(values=c("red2", "blue2", "purple2")) +
+  scale_color_manual(values=c("purple2", "blue2", "red2")) +
   theme_bw() + guides(color = F) + 
   theme(legend.position="bottom", 
         aspect.ratio = 1)

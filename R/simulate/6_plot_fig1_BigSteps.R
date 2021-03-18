@@ -13,9 +13,9 @@ mutate = dplyr::mutate
 
 #----Load data----
 
-landscape <- readRDS("output/small ups/model_data/landscape.RData")[[1]]
-tracks <- readRDS("output/small ups/model_data/tracks_all.RData") 
-traps <- readRDS("output/small ups/model_data/traps.RData")
+landscape <- readRDS("output/big ups/model_data/landscape.RData")[[1]]
+tracks <- readRDS("output/big ups/model_data/tracks_all.RData") 
+traps <- readRDS("output/big ups/model_data/traps.RData")
 track <- tracks %>%
   pluck(1) %>%
   filter(id == 20)
