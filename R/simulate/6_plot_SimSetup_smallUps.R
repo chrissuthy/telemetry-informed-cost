@@ -140,12 +140,12 @@ p1 <- ggplot() +
   geom_tile(data = df.l, aes(x=x, y=y, fill=layer)) +
   scale_fill_viridis_c("Covariate", direction = -1) +
   geom_rect(data = df_rect, fill=NA,
-            color = "black", size = 2,
+            color = "#DC267F", size = 1,
             mapping = aes(
               xmin = 11.9, xmax = 25.9,
               ymin = 8.3,  ymax = 22.3)) +
-  geom_point(data=traps, pch = 21, color = "black",
-             aes(x=x, y=y), size = 2, fill="white") +
+  geom_point(data=traps, pch = 1, color = "black",
+             aes(x=x, y=y), size = 2, stroke = 1) +
   coord_equal() +
   theme_minimal() +
   labs(x=NULL, y=NULL, title = "1. Generate cost surface") +
@@ -159,19 +159,24 @@ p1 <- ggplot() +
 p2 <- ggplot() +
   lims(x = c(11.9, 25.9), 
        y = c(8.3, 22.3)) +
-  geom_rect(data = df_rect, 
-            color = "black", size = 2,
+  geom_rect(data = df_rect, fill="yellow",
+            color = "#DC267F", size = 2,
             mapping = aes(
               xmin = 11.9, xmax = 25.9,
               ymin = 8.3, ymax = 22.3)) +
   geom_tile(data = df.l, aes(x=x, y=y), fill = "white") +
   new_scale("fill") +
   geom_tile(data = df.l, aes(x=x, y=y, fill=layer)) +
-  scale_fill_viridis_c("Covariate", alpha=0.75, direction = -1) +
+  scale_fill_viridis_c("Covariate", alpha=0.85, direction = -1) +
   geom_path(data=track, aes(x=x, y=y), 
-            color = "white", size=0.8) +
+            color = alpha("white", 0), size=0.8) +
   geom_path(data=track, aes(x=x, y=y), 
-            color = "red", size=0.4) +
+            color = alpha("#DC267F", 0.2), size=0.7) +
+  geom_rect(data = df_rect, fill=NA,
+            color = "#DC267F", size = 2,
+            mapping = aes(
+              xmin = 11.9, xmax = 25.9,
+              ymin = 8.3, ymax = 22.3)) +
   coord_equal() +
   theme_minimal() +
   labs(x=NULL, y=NULL, title = "2. Simulate movement data") +
@@ -180,7 +185,7 @@ p2 <- ggplot() +
     plot.title = element_text(hjust=0.5, face = "bold", size=16),
     axis.text = element_blank(),
     legend.position = "none",
-    panel.grid = element_blank())
+    panel.grid = element_blank()); p2
 
 # Traps
 p3 <- ggplot() +
@@ -188,33 +193,32 @@ p3 <- ggplot() +
        y = c(8.3, 22.3)) +
   # White background
   geom_rect(data = df_rect, fill=NA,
-            color = "black", size = 2,
+            color = "#DC267F", size = 2,
             mapping = aes(
               xmin = 11.9, xmax = 25.9,
               ymin = 8.3,  ymax = 22.3)) +
   # Cost surface
   geom_tile(data = df.l, aes(x=x, y=y), fill = "white") +
   # Movement track
-  geom_path(data=track, aes(x=x, y=y), size=0.5, 
-            color = alpha("red", 0.5)) +
+  geom_path(data=track, aes(x=x, y=y), 
+            color = alpha("#DC267F", 0.3), size=0.9) +
   # SCR traps
   new_scale("color") +
-  # Border
-  geom_point(data=traps, pch = 21, color = "black",
-             aes(x=x, y=y, size = dets+0.75)) +
+  # # Border
+  # geom_point(data=traps, pch = 21, color = "black",
+  #            aes(x=x, y=y, size = dets+0.75)) +
   # Fill
+  geom_point(data=traps, pch = 1,
+             aes(x=x, y=y), size = 2.8, stroke=1.2) +
+  geom_point(data=traps, pch = 1,
+             aes(x=x, y=y, color = pres, size = dets+3), stroke=3) +
   geom_point(data=traps, pch = 16,
-             aes(x=x, y=y, color = pres, size = dets+0.75)) +
+             aes(x=x, y=y, color = pres, size = dets+3)) +
   # Color
-  scale_color_manual(values=c("white", "black")) +
+  scale_color_manual(values=c(NA, "black")) +
   # Label SCR traps
-  geom_text(data=traps, aes(x=x, y=y, label = dets2, size = dets2), 
+  geom_text(data=traps, aes(x=x, y=y, label = dets2, size = dets2+5), 
             color = "white", fontface="bold") +
-  # geom_rect(data = df_rect, fill=NA,
-  #           color = "black", size = 2,
-  #           mapping = aes(
-  #             xmin = 13.375, xmax = 24.625,
-  #             ymin = 10.125,  ymax = 21.375)) +
   # Formattting
   #coord_equal() +
   theme_minimal() +
@@ -224,7 +228,7 @@ p3 <- ggplot() +
     plot.title = element_text(hjust=0.5, face = "bold", size=16),
     axis.text = element_blank(),
     legend.position = "none",
-    panel.grid = element_blank())
+    panel.grid = element_blank()); p3
 
 # Together 1 x 3
 ps_small <- p1 + p2 + p3
