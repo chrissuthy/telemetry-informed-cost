@@ -288,4 +288,59 @@ ggplot(data = results %>%
 
 
 
+# # # # # # # # # # # # # # # # # # 
+" N E W   F I G U R E" # # # # # # #
+# # # # # # # # # # # # # # # # # # 
+
+# Color palettes
+ibm <- c("#648fff", "#785ef0", "#dc267f")
+pal <- c("black", ibm[1], ibm[1], ibm[2], ibm[2], ibm[3], ibm[3])
+pal <- c("black", ibm[3], ibm[3], ibm[3])
+pal <- c("black", viridis(5)[2], viridis(5)[3], viridis(5)[4]) # Scenairo
+pal <- c(viridis(5)[2], viridis(5)[3]) # Upsilon
+
+fig_dat <- results %>%
+  filter(Scenario %in% as.character(unique(results$Scenario)[c(1,3,5,7)])) %>%
+  filter(key %in% c(
+    expression(Cost ~ (alpha)),
+    expression(Density ~ (D))))
+
+# FIGURE
+ggplot(data = fig_dat,
+       aes(x = Scenario, group = Upsilon, shape = Scenario, color = Upsilon)) +
+  # Bias bar
+  geom_rect(ymin = -5, ymax = 5, xmin = -2, xmax = 10, 
+            fill = "gray91", color = "gray91") +
+  geom_hline(yintercept = 0, color = "gray40", size = 0.7) +
+  
+  # Main results
+  geom_pointrange(size = 0.7, position = position_dodge(0.6),
+                  aes(y = trim.mean, ymin = bias_lower, ymax = bias_upper)) +
+  # Color
+  scale_color_manual(values = pal) +
+  scale_shape_manual(values = c(17, 15, 15, 15)) +
+  # Ntel text
+  geom_text(aes(y = trim.mean, label = ntel, x = Scenario, group = Upsilon), 
+            color = "white", size = 2.5, fontface = "bold",
+            position = position_dodge(0.6)) +
+  # Facet
+  facet_grid_sc(
+    key~.,
+    labeller = label_parsed,
+    scales = list(y = scales_y)) +
+  # Theme
+  labs(y = "% Relative bias", x = NULL) +
+  theme_minimal() +
+  theme(aspect.ratio = 1,
+        legend.position = "none",
+        text = element_text(size = 14),
+        strip.text.y = element_text(angle = 0, hjust = 0),
+        panel.border = element_rect(fill = NA, color = "gray70", size=1),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text.x = element_blank())
+  
+
+
+
 
