@@ -139,12 +139,12 @@ p1 <- ggplot() +
   geom_tile(data = df.l, aes(x=x, y=y, fill=layer)) +
   scale_fill_viridis_c("Covariate", direction = -1) +
   geom_rect(data = df_rect, fill=NA,
-            color = "#DC267F", size = 1,
+            color = "black", size = 1,
             mapping = aes(
               xmin = 11.9, xmax = 25.9,
               ymin = 8.3,  ymax = 22.3)) +
-  geom_point(data=traps, pch = 1, color = "black",
-             aes(x=x, y=y), size = 2, stroke = 1) +
+  geom_point(data=traps, pch = 3, color = "black",
+             aes(x=x, y=y), size = 0.9, stroke = 0.8) +
   coord_equal() +
   theme_minimal() +
   labs(x=NULL, y=NULL) +
@@ -159,20 +159,20 @@ p2 <- ggplot() +
   lims(x = c(11.9, 25.9), 
        y = c(8.3, 22.3)) +
   geom_rect(data = df_rect, fill="yellow",
-            color = "#DC267F", size = 2,
+            color = "black", size = 2,
             mapping = aes(
               xmin = 11.9, xmax = 25.9,
               ymin = 8.3, ymax = 22.3)) +
   geom_tile(data = df.l, aes(x=x, y=y), fill = "white") +
   new_scale("fill") +
   geom_tile(data = df.l, aes(x=x, y=y, fill=layer)) +
-  scale_fill_viridis_c("Covariate", alpha=0.85, direction = -1) +
+  scale_fill_viridis_c("Covariate", alpha=0.55, direction = -1) +
   geom_path(data=track, aes(x=x, y=y), 
             color = alpha("white", 0), size=0.8) +
   geom_path(data=track, aes(x=x, y=y), 
-            color = alpha("#DC267F", 0.2), size=0.7) +
+            color = alpha(viridis(5)[2], 0.4), size=0.7) +
   geom_rect(data = df_rect, fill=NA,
-            color = "#DC267F", size = 2,
+            color = "black", size = 2,
             mapping = aes(
               xmin = 11.9, xmax = 25.9,
               ymin = 8.3, ymax = 22.3)) +
@@ -186,13 +186,15 @@ p2 <- ggplot() +
     legend.position = "none",
     panel.grid = element_blank()); p2
 
+traps[1,5] <- 3 # was NA
+
 # Traps
 p3 <- ggplot() +
   lims(x = c(11.9, 25.9), 
        y = c(8.3, 22.3)) +
   # White background
   geom_rect(data = df_rect, fill=NA,
-            color = "#DC267F", size = 2,
+            color = "black", size = 2,
             mapping = aes(
               xmin = 11.9, xmax = 25.9,
               ymin = 8.3,  ymax = 22.3)) +
@@ -200,15 +202,15 @@ p3 <- ggplot() +
   geom_tile(data = df.l, aes(x=x, y=y), fill = "white") +
   # Movement track
   geom_path(data=track, aes(x=x, y=y), 
-            color = alpha("#DC267F", 0.3), size=0.9) +
+            color = alpha(viridis(5)[2], 0.2), size=0.9) +
   # SCR traps
   new_scale("color") +
   # # Border
   # geom_point(data=traps, pch = 21, color = "black",
   #            aes(x=x, y=y, size = dets+0.75)) +
   # Fill
-  geom_point(data=traps, pch = 1,
-             aes(x=x, y=y), size = 2.8, stroke=1.2) +
+  geom_point(data=traps, pch = 3,
+             aes(x=x, y=y), size = 1.6, stroke=0.9) +
   geom_point(data=traps, pch = 1,
              aes(x=x, y=y, color = pres, size = dets+3), stroke=3) +
   geom_point(data=traps, pch = 16,
@@ -227,7 +229,7 @@ p3 <- ggplot() +
     plot.title = element_text(hjust=0.5, face = "bold", size=16),
     axis.text = element_blank(),
     legend.position = "none",
-    panel.grid = element_blank()); p3
+    panel.grid = element_blank())
 
 # Together 1 x 3
 ps_big <- p1 + p2 + p3
