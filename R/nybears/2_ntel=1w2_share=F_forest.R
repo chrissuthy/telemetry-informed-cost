@@ -60,7 +60,7 @@ ss <- bears.ss_ext %>%
   rasterFromXYZ()
 
 plot(forest)
-points(ss)
+#points(ss) not points
 
 
 # par(mfrow=c(1,2))
@@ -279,6 +279,13 @@ p <- c(1,                          # alpha2
        log(100/ncell(ss)),         # d0
        log(4.3)                    # sig_mm
 )
+p <- c(-1.6046985, #estimates from ind 1
+       -0.9913457,
+       -0.4781996,
+        0.6404187,
+       -2.9303722,
+       -3.8406058,
+        0.8984557)
 
 
 t0 <- Sys.time()
