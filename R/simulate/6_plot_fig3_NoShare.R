@@ -298,6 +298,7 @@ pal <- c("black", ibm[1], ibm[1], ibm[2], ibm[2], ibm[3], ibm[3])
 pal <- c("black", ibm[3], ibm[3], ibm[3])
 pal <- c("black", viridis(5)[2], viridis(5)[3], viridis(5)[4]) # Scenairo
 pal <- c(viridis(5)[2], viridis(5)[3]) # Upsilon
+pal <- ibm[c(1,3)]
 
 fig_dat <- results %>%
   filter(Scenario %in% as.character(unique(results$Scenario)[c(1,3,5,7)])) %>%
@@ -333,7 +334,7 @@ ggplot(data = fig_dat,
   theme_minimal() +
   theme(aspect.ratio = 1,
         legend.position = "none",
-        text = element_text(size = 14),
+        text = element_text(size = 13),
         strip.text.y = element_text(angle = 0, hjust = 0),
         panel.border = element_rect(fill = NA, color = "gray70", size=1),
         panel.grid.major.x = element_blank(),

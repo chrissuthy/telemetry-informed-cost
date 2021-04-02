@@ -214,8 +214,8 @@ results <- results0 %>%
     sigma = "sigma[SCR]",
     sigma_move = "sigma[MM]")) %>%
   mutate(Upsilon = recode(Upsilon,
-    `high-res` = "sigma < sigma[det]",
-    `low-res` = "sigma == sigma[det]"))
+    `high-res` = "sigma[step] < sigma[home]",
+    `low-res` = "sigma[step] == sigma[home]"))
 
 
 #----NEW plot----
@@ -224,6 +224,7 @@ results <- results0 %>%
 ibm <- c("#648fff", "#785ef0", "#dc267f")
 pal <- c("black", ibm[1], ibm[1], ibm[2], ibm[2], ibm[3], ibm[3])
 pal <- c("black", ibm[1], ibm[3], ibm[1], ibm[3], ibm[1], ibm[3])
+pal <- c("black", "#E66100", "#5D3A9B","#E66100", "#5D3A9B","#E66100", "#5D3A9B")
 
 # Facet custom scales
 scales_y <- list(
