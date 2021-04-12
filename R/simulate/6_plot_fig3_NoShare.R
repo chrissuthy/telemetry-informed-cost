@@ -231,7 +231,11 @@ fig_dat <- results %>%
   filter(Scenario %in% as.character(unique(results$Scenario)[c(1,3,5,7)])) %>%
   filter(key %in% c(
     expression(Cost ~ (alpha[1])),
-    expression(Density ~ (lambda))))
+    expression(Density ~ (lambda)))) %>%
+  mutate(Upsilon = plyr::revalue(
+    Upsilon, 
+    c("sigma < sigma[det]" = "sigma[step] < sigma[home]", 
+      "sigma == sigma[det]" = "sigma[step] == sigma[home]")))
 
 p1 <- ggplot(data = fig_dat %>% filter(key %in% expression(Cost ~ (alpha[1]))), 
              aes(x = Scenario, group = Upsilon, shape = Scenario, color = Upsilon)) +
@@ -301,4 +305,88 @@ p <- p1+p2;p
 
 ggsave(filename = "Figure2.pdf", plot = p, device="pdf",
        dpi = 600, scale = 0.8, height = 5.25, width = 8.75,
+       path = "/Users/gatesdupont/Desktop")
+
+
+
+
+
+
+
+
+parse.labels <- function(x) parse(text = x)
+
+p1 <- fig_dat %>% 
+  filter(key %in% expression(Cost ~ (alpha[1]))) %>%
+  mutate(ntel = as.character(ntel)) %>%
+  ggplot(data = ., aes(x = ntel, group = Upsilon, shape = ntel, color = Upsilon)) +
+  # Bias bar
+  geom_rect(ymin = -5, ymax = 5, xmin = -2, xmax = 10, 
+            fill = "gray91", color = "gray91") +
+  geom_hline(yintercept = 0, color = "gray40", size = 0.7) +
+  
+  # Main results
+  geom_pointrange(size = 0.7, position = position_dodge(0.6),
+                  aes(y = p.mean, ymin = bias_lower, ymax = bias_upper)) +
+  # Color
+  scale_color_manual(values = pal) +
+  scale_shape_manual(values = c(17, 15, 15, 15)) +
+  # Ntel text
+  geom_text(aes(y = p.mean, label = ntel, x = ntel, group = Upsilon), 
+            color = "white", size = 2.5, fontface = "bold",
+            position = position_dodge(0.6)) +
+  # Facet
+  ylim(-60,60) +
+  # Theme
+  labs(y = "% Relative bias", x = NULL, title = Cost ~ (alpha[1])) +
+  theme_minimal() +
+  theme(aspect.ratio = 1,
+        legend.position = "none",
+        text = element_text(size = 13),
+        plot.title = element_text(hjust=0.5, size=13),
+        strip.text.y = element_text(angle = 0, hjust = 0),
+        panel.border = element_rect(fill = NA, color = "gray70", size=1),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text.x = element_blank());p1
+
+p2 <- fig_dat %>% 
+  filter(key %in% expression(Density ~ (lambda))) %>%
+  mutate(ntel = as.character(ntel)) %>%
+  ggplot(data = ., aes(x = ntel, group = Upsilon, shape = ntel, color = Upsilon)) +
+  # Bias bar
+  geom_rect(ymin = -5, ymax = 5, xmin = -2, xmax = 10, 
+            fill = "gray91", color = "gray91") +
+  geom_hline(yintercept = 0, color = "gray40", size = 0.7) +
+  
+  # Main results
+  geom_pointrange(size = 0.7, position = position_dodge(0.6),
+                  aes(y = p.mean, ymin = bias_lower, ymax = bias_upper)) +
+  # Color
+  scale_color_manual(values = pal, NULL, labels = parse.labels) +
+  scale_shape_manual(values = c(17, 15, 15, 15), guide=F) +
+  # Ntel text
+  geom_text(aes(y = p.mean, label = ntel, x = ntel, group = Upsilon), 
+            color = "white", size = 2.5, fontface = "bold",
+            position = position_dodge(0.6)) +
+  guides(color = guide_legend(override.aes = list(shape = 15, linetype = 0, size = 1.1))) +
+  # Facet
+  ylim(-15,15) +
+  # Theme
+  labs(y = NULL, x = NULL, title = Density ~ (lambda)) +
+  theme_minimal() +
+  theme(aspect.ratio = 1,
+        #legend.position = "none",
+        text = element_text(size = 13),
+        plot.title = element_text(hjust=0.5, size=13),
+        strip.text.y = element_text(angle = 0, hjust = 0),
+        panel.border = element_rect(fill = NA, color = "gray70", size=1),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text.x = element_blank());p2
+
+p <- p1+p2;p
+
+ggsave(filename = "Figure2.pdf", plot = p, device="pdf",
+       dpi = 600, scale = 0.8, height = 3.75, width = 8.75,
        path = "/Users/gatesdupont/Desktop")
