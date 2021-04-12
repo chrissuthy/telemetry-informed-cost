@@ -30,11 +30,6 @@ ggquant <- function(y, int){
       ymax = quantile(y, Uint)))
 }
 
-meantrim <- function(y){
-  result <- mean(y, trim = 0.1)
-  return(result)
-}
-
 # Analyze results files
 analyze <- function(df, sigma, scenario, scenario_ups, t_ups, ntel){
   if(sigma == "unshared"){
@@ -115,6 +110,7 @@ ntel5_shared <- read.table("./output/small ups/est_ntel=5_share=TRUE/results.txt
 # No movement
 bigups_noMove <- read.table("./output/big ups/est_noMove/results.txt") %>%
   as.data.frame() %>%
+  filter(sig < 3) %>%
   select(-p0) %>%
   gather() %>%
   mutate(true = rep(c(t_alpha2, t_sig, t_d0), each = nrow(.)/3)) %>%
@@ -152,16 +148,6 @@ bigups_ntel5_shared <- read.table("./output/big ups/est_ntel=5_share=TRUE/result
 
 #----Combine data----
 
-# missing <- expand.grid(
-#   key = c("cost", "density", "sigma", "sigma_move"),
-#   value = c(NA),
-#   true = c(NA),
-#   prbias = c(NA),
-#   Scenario = c("ntel=3, shared", "ntel=5, unshared"),
-#   Upsilon = "low-res",
-#   ntel = c(3, 5)
-# )
-
 # Combine
 df <- rbind(
   noMove,
@@ -175,9 +161,6 @@ df <- rbind(
   bigups_ntel3_shared,
   bigups_ntel5_unshared,
   bigups_ntel5_shared) %>%
-  #filter(key != "upsilon") %>%
-  #filter(key != "pr(moved)") %>%
-  #rbind(., missing) %>%
   mutate(Scenario = factor(Scenario, 
                            levels = c("No movement", 
                                       "ntel=1, shared", "ntel=1, unshared", 
@@ -191,23 +174,11 @@ df <- rbind(
 results0 <- df %>%
   group_by(key, Scenario, Upsilon, ntel) %>%
   #na.omit() %>%
-  summarise(trim.mean = mean(prbias, trim = 0.1),
+  summarise(p.mean = mean(prbias, trim = 0.00),
             bias_upper = quantile(prbias, 0.975),
             bias_lower = quantile(prbias, 0.025))
 
-# missing_results <- expand.grid(
-#   key = c("cost", "density", "sigma", "sigma_move"),
-#   Scenario = c("ntel=3, shared", "ntel=5, unshared"),
-#   Upsilon = "low-res",
-#   ntel = c(3, 5),
-#   trim.mean = NA,
-#   bias_upper = NA,
-#   bias_lower = NA
-# )
-
-
 results <- results0 %>%
-  #rbind(., missing_results) %>%
   mutate(key = recode(key,
                       cost = "Cost ~ (alpha)",
                       density = "Density ~ (D)",
@@ -221,12 +192,12 @@ results <- results0 %>%
 
 #-----Table----
 
-AppendixS1 <- results %>%
-  select(key, Scenario, Upsilon, ntel, trim.mean, bias_lower, bias_upper) %>%
+FullTab <- results %>%
+  select(key, Scenario, Upsilon, ntel, p.mean, bias_lower, bias_upper) %>%
   mutate_if(is.numeric, round, 2) %>%
   mutate(LU = paste0("(",
-    sprintf("%.2f", bias_lower), ", ",
-    sprintf("%.2f", bias_upper), ")")) %>%
+                     sprintf("%.2f", bias_lower), ", ",
+                     sprintf("%.2f", bias_upper), ")")) %>%
   select(-bias_lower, -bias_upper) %>%
   arrange(Upsilon) %>%
   mutate(key = recode(key,
@@ -247,19 +218,36 @@ AppendixS1 <- results %>%
   mutate(formulation = Scenario) %>%
   mutate(scenario = Upsilon) %>%
   mutate(scenario = recode(scenario,
-                           `upsilon < sigma` = "small-sigma_{det}",
-                           `upsilon == sigma` = "large-sigma_{det}")) %>%
+                           `upsilon < sigma` = "small-sigma_{step}",
+                           `upsilon == sigma` = "large-sigma_{step}")) %>%
   ungroup() %>%
   select(-Scenario, -Upsilon) %>%
   select(scenario, 
          parameter = key, 
          `sigma_{det}` = formulation, 
          `n_{tel}` = ntel, 
-         mean = trim.mean, 
-         bounds = LU)
+         mean = p.mean, 
+         bounds = LU) %>%
+  mutate(mean = round(mean, 0))
 
-write.csv(AppendixS1, file = "/Users/gatesdupont/Desktop/AppendixS1.csv")
+FullTabsmall <- FullTab %>% filter(scenario == "small-sigma_{step}")
+FullTablarge <- FullTab %>% filter(scenario == "large-sigma_{step}")
 
+FullTab_wide <- cbind(FullTabsmall[,c(2,3,4,5)], mean_big = FullTablarge$mean) %>%
+  mutate(Model = if_else(`sigma_{det}` == "standard", "M", "iM")) %>%
+  mutate(parameter = recode(parameter,
+                            `alpha_1` = "alpha_1",
+                            `d_0` = "lambda",
+                            `sigma_{det}'` = "sigma_{det}",
+                            `sigma_{det}''` = "sigma_{home}",
+                            sigma = "sigma_{step}",
+                            psi = "psi")) %>%
+  select(Parameter = parameter, Model, `sigma_{det}`, `n_{tel}`, `%RB_small` = mean, `%RB_large` = mean_big)
 
+App2TabS2 <- FullTab_wide %>% 
+  filter(`sigma_{det}` != "shared") %>%
+  select(-`sigma_{det}`)
 
+App3TabS2 <- FullTab_wide %>%
+  select(-Model)
 

@@ -30,11 +30,6 @@ ggquant <- function(y, int){
       ymax = quantile(y, Uint)))
 }
 
-meantrim <- function(y){
-  result <- mean(y, trim = 0.0)
-  return(result)
-}
-
 # Analyze results files
 analyze <- function(df, sigma, scenario, scenario_ups, t_ups, ntel){
   if(sigma == "unshared"){
@@ -176,8 +171,8 @@ df <- rbind(
   bigups_ntel3_shared,
   bigups_ntel5_unshared,
   bigups_ntel5_shared) %>%
-  filter(key != "upsilon") %>%
-  filter(key != "pr(moved)") %>%
+  #filter(key != "upsilon") %>%
+  #filter(key != "pr(moved)") %>%
   #rbind(., missing) %>%
   mutate(Scenario = factor(Scenario, 
                            levels = c("No movement", 
@@ -192,113 +187,98 @@ df <- rbind(
 results0 <- df %>%
   group_by(key, Scenario, Upsilon, ntel) %>%
   #na.omit() %>%
-  summarise(p.mean = mean(prbias), # we no longer use trim mean
-            bias_upper = quantile(prbias, 0.75),
-            bias_lower = quantile(prbias, 0.25))
+  summarise(p.mean = mean(prbias, trim = 0.00),
+            bias_upper = quantile(prbias, 0.975),
+            bias_lower = quantile(prbias, 0.025))
+
+# missing_results <- expand.grid(
+#   key = c("cost", "density", "sigma", "sigma_move"),
+#   Scenario = c("ntel=3, shared", "ntel=5, unshared"),
+#   Upsilon = "low-res",
+#   ntel = c(3, 5),
+#   p.mean = NA,
+#   bias_upper = NA,
+#   bias_lower = NA
+# )
 
 
 results <- results0 %>%
   #rbind(., missing_results) %>%
   mutate(key = recode(key,
-                      cost = "Cost ~ (alpha[1])",
-                      density = "Density ~ (lambda)",
+                      cost = "Cost ~ (alpha)",
+                      density = "Density ~ (D)",
                       sigma = "sigma[SCR]",
                       sigma_move = "sigma[MM]")) %>%
   mutate(Upsilon = recode(Upsilon,
-                          `high-res` = "sigma < sigma[det]",
-                          `low-res` = "sigma == sigma[det]"))
+                          `high-res` = "upsilon < sigma",
+                          `low-res` = "upsilon == sigma"))
 
 
-#----NEW plot----
 
-# Color palettes
-ibm <- c("#648fff", "#785ef0", "#dc267f")
-pal <- c("black", ibm[1], ibm[1], ibm[2], ibm[2], ibm[3], ibm[3])
-pal <- c("black", ibm[3], ibm[3], ibm[3])
+#-----Table----
 
-# Facet custom scales
-scales_y <- list(
-  "Cost ~ (alpha[1])" = scale_y_continuous(
-    limits = c(-60,60), breaks = c(-50, -25, 0, 25, 50)),
-  "Density ~ (lambda)" = scale_y_continuous(
-    limits = c(-15,15), breaks = c(-10, 0, 10)))
+AppendixS1 <- results %>%
+  select(key, Scenario, Upsilon, ntel, p.mean, bias_lower, bias_upper) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  mutate(LU = paste0("(",
+    sprintf("%.2f", bias_lower), ", ",
+    sprintf("%.2f", bias_upper), ")")) %>%
+  select(-bias_lower, -bias_upper) %>%
+  arrange(Upsilon) %>%
+  mutate(key = recode(key,
+                      `Cost ~ (alpha)` = "alpha_1",
+                      `Density ~ (D)` = "d_0",
+                      `sigma[SCR]` = "sigma_{det}'",
+                      `sigma[MM]` = "sigma_{det}''",
+                      `upsilon` = "sigma",
+                      `pr(moved)` = "psi")) %>%
+  mutate(Scenario = recode(Scenario,
+                           `No movement` = "standard",
+                           `ntel=1, shared` = "shared",
+                           `ntel=1, unshared` = "independent",
+                           `ntel=3, shared` = "shared",
+                           `ntel=3, unshared` = "independent",
+                           `ntel=5, shared` = "shared",
+                           `ntel=5, unshared` = "independent")) %>%
+  mutate(formulation = Scenario) %>%
+  mutate(scenario = Upsilon) %>%
+  mutate(scenario = recode(scenario,
+                           `upsilon < sigma` = "small-sigma_{step}",
+                           `upsilon == sigma` = "large-sigma_{step}")) %>%
+  ungroup() %>%
+  select(-Scenario, -Upsilon) %>%
+  select(scenario, 
+         parameter = key, 
+         `sigma_{det}` = formulation, 
+         `n_{tel}` = ntel, 
+         mean = p.mean, 
+         bounds = LU) %>%
+  mutate(mean = round(mean, 0))
 
-# Color palettes
-ibm <- c("#648fff", "#785ef0", "#dc267f")
-pal <- ibm[c(1,3)]
+AppendixS1small <- AppendixS1 %>% filter(scenario == "small-sigma_{step}")
+AppendixS1large <- AppendixS1 %>% filter(scenario == "large-sigma_{step}")
 
-fig_dat <- results %>%
-  filter(Scenario %in% as.character(unique(results$Scenario)[c(1,3,5,7)])) %>%
-  filter(key %in% c(
-    expression(Cost ~ (alpha[1])),
-    expression(Density ~ (lambda))))
+AppendixS1_wide <- cbind(AppendixS1small[,c(2,3,4,5)], mean_big = AppendixS1large$mean) %>%
+  mutate(Model = if_else(`sigma_{det}` == "standard", "M", "iM")) %>%
+  mutate(parameter = recode(parameter,
+                            `alpha_1` = "alpha_1",
+                            `d_0` = "lambda",
+                            `sigma_{det}'` = "sigma_{det}",
+                            `sigma_{det}''` = "sigma_{home}",
+                            sigma = "sigma_{step}",
+                            psi = "psi")) %>%
+  select(Parameter = parameter, Model, `sigma_{det}`, `n_{tel}`, `%RB_small` = mean, `%RB_large` = mean_big)
 
-p1 <- ggplot(data = fig_dat %>% filter(key %in% expression(Cost ~ (alpha[1]))), 
-             aes(x = Scenario, group = Upsilon, shape = Scenario, color = Upsilon)) +
-  # Bias bar
-  geom_rect(ymin = -5, ymax = 5, xmin = -2, xmax = 10, 
-            fill = "gray91", color = "gray91") +
-  geom_hline(yintercept = 0, color = "gray40", size = 0.7) +
-  
-  # Main results
-  geom_pointrange(size = 0.7, position = position_dodge(0.6),
-                  aes(y = p.mean, ymin = bias_lower, ymax = bias_upper)) +
-  # Color
-  scale_color_manual(values = pal) +
-  scale_shape_manual(values = c(17, 15, 15, 15)) +
-  # Ntel text
-  geom_text(aes(y = p.mean, label = ntel, x = Scenario, group = Upsilon), 
-            color = "white", size = 2.5, fontface = "bold",
-            position = position_dodge(0.6)) +
-  # Facet
-  ylim(-60,60) +
-  # Theme
-  labs(y = "% Relative bias", x = NULL, title = Cost ~ (alpha[1])) +
-  theme_minimal() +
-  theme(aspect.ratio = 1,
-        legend.position = "none",
-        text = element_text(size = 13),
-        plot.title = element_text(hjust=0.5, size=13),
-        strip.text.y = element_text(angle = 0, hjust = 0),
-        panel.border = element_rect(fill = NA, color = "gray70", size=1),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        axis.text.x = element_blank())
+App2TabS2 <- AppendixS1_wide %>% 
+  filter(`sigma_{det}` != "shared") %>%
+  select(-`sigma_{det}`)
 
-p2 <- ggplot(data = fig_dat %>% filter(key %in% expression(Density ~ (lambda))), 
-             aes(x = Scenario, group = Upsilon, shape = Scenario, color = Upsilon)) +
-  # Bias bar
-  geom_rect(ymin = -5, ymax = 5, xmin = -2, xmax = 10, 
-            fill = "gray91", color = "gray91") +
-  geom_hline(yintercept = 0, color = "gray40", size = 0.7) +
-  
-  # Main results
-  geom_pointrange(size = 0.7, position = position_dodge(0.6),
-                  aes(y = p.mean, ymin = bias_lower, ymax = bias_upper)) +
-  # Color
-  scale_color_manual(values = pal) +
-  scale_shape_manual(values = c(17, 15, 15, 15)) +
-  # Ntel text
-  geom_text(aes(y = p.mean, label = ntel, x = Scenario, group = Upsilon), 
-            color = "white", size = 2.5, fontface = "bold",
-            position = position_dodge(0.6)) +
-  # Facet
-  ylim(-15,15) +
-  # Theme
-  labs(y = NULL, x = NULL, title = Density ~ (lambda)) +
-  theme_minimal() +
-  theme(aspect.ratio = 1,
-        legend.position = "none",
-        text = element_text(size = 13),
-        plot.title = element_text(hjust=0.5, size=13),
-        strip.text.y = element_text(angle = 0, hjust = 0),
-        panel.border = element_rect(fill = NA, color = "gray70", size=1),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        axis.text.x = element_blank())
+App3TabS2 <- AppendixS1_wide %>%
+  select(-Model)
 
-p <- p1+p2;p
+write.csv(App2TabS2, file = "/Users/gatesdupont/Desktop/App2TabS2.csv")
+write.csv(App3TabS2, file = "/Users/gatesdupont/Desktop/App3TabS2.csv")
 
-ggsave(filename = "Figure2.pdf", plot = p, device="pdf",
-       dpi = 600, scale = 0.8, height = 5.25, width = 8.75,
-       path = "/Users/gatesdupont/Desktop")
+
+
+
