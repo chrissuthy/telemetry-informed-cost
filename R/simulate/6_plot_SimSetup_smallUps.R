@@ -138,7 +138,7 @@ p1 <- ggplot() +
   #             xmin = xmin, xmax = xmax,
   #             ymin = ymin,  ymax = ymax)) +
   geom_tile(data = df.l, aes(x=x, y=y, fill=layer)) +
-  scale_fill_viridis_c("Covariate", direction = -1) +
+  scale_fill_viridis_c(NULL, direction = -1) +
   geom_rect(data = df_rect, fill=NA,
             color = "black", size = 1,
             mapping = aes(
@@ -148,7 +148,7 @@ p1 <- ggplot() +
              aes(x=x, y=y), size = 0.9, stroke = 0.8) +
   coord_equal() +
   theme_minimal() +
-  labs(x=NULL, y=NULL, title = "1. Generate cost surface") +
+  labs(x=NULL, y=NULL, title = "(a) Generate cost surface") +
   theme(
     plot.title = element_text(hjust=0.5, face = "bold", size=16),
     axis.text = element_text(size=16),
@@ -179,7 +179,7 @@ p2 <- ggplot() +
               ymin = 8.3, ymax = 22.3)) +
   coord_equal() +
   theme_minimal() +
-  labs(x=NULL, y=NULL, title = "2. Simulate movement data") +
+  labs(x=NULL, y=NULL, title = "(b) Simulate movement data") +
   theme(
     aspect.ratio = 1,
     plot.title = element_text(hjust=0.5, face = "bold", size=16),
@@ -222,7 +222,7 @@ p3 <- ggplot() +
   # Formattting
   #coord_equal() +
   theme_minimal() +
-  labs(x=NULL, y=NULL, title = "3. Collect as SCR data") +
+  labs(x=NULL, y=NULL, title = "(c) Collect as SCR data") +
   theme(
     aspect.ratio = 1,
     plot.title = element_text(hjust=0.5, face = "bold", size=16),

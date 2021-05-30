@@ -10,6 +10,7 @@ library(cowplot)
 library(patchwork)
 library(viridis)
 library(RColorBrewer)
+library(colorspace)
 
 source("R/likelihoods/scr_move_cost_predict.R")
 
@@ -89,7 +90,7 @@ plot(diff ~ cut(percent_forest, breaks=seq(0,1,0.05)), dwc_diff,
 
 p2 <- ggplot(r_dens,aes(x=X,y=Y,fill=dwc))+
   geom_raster() +
-  labs(title = expression("Density-weighted Connectivity" [M[lcp]]), 
+  labs(title = expression("(b) Density-weighted Connectivity" [M[lcp]]), 
        x = NULL, y = NULL, fill=NULL) +
   theme_bw() +
   scale_fill_distiller(palette = "Purples",direction = 1, limits = c(0,0.19)) +
@@ -99,7 +100,7 @@ p2 <- ggplot(r_dens,aes(x=X,y=Y,fill=dwc))+
 
 p3 <- ggplot(r_dens0,aes(x=X,y=Y,fill=dwc))+
   geom_raster() +
-  labs(title = expression("Density-weighted Connectivity" [iM[lcp]]), 
+  labs(title = expression("(c) Density-weighted Connectivity" [iM[lcp]]), 
        x = NULL, y = NULL, fill=NULL) +
   theme_bw() +
   scale_fill_distiller(palette = "Purples",direction = 1, limits = c(0,0.19)) +
@@ -109,7 +110,7 @@ p3 <- ggplot(r_dens0,aes(x=X,y=Y,fill=dwc))+
 
 p4 <- ggplot(dwc_diff,aes(x=X,y=Y,fill=diff))+
   geom_raster() +
-  labs(title = expression("% Difference" ~ (DWC[M[lcp]] - DWC[iM[lcp]])), 
+  labs(title = expression("(e) % Difference" ~ (DWC[M[lcp]] - DWC[iM[lcp]])), 
        x = NULL, y = NULL, fill=NULL) +
   theme_bw() +
   # scale_fill_gradient2(high =  "#0080FF", mid = alpha("white",1), 
@@ -128,7 +129,7 @@ p5 <- dwc_diff %>%
   geom_boxplot(color = "black", fill = lighten("black", 0.85), pch = 16,
                outlier.alpha = 0.3) +
   labs(y = expression("% Difference" ~ (DWC[M[lcp]] - DWC[iM[lcp]])),
-       x = "% Forest") +
+       x = "% Forest", title = expression("(d) % Difference" ~ (DWC[M[lcp]] - DWC[iM[lcp]]))) +
   theme_bw() +
   theme(legend.position="bottom", aspect.ratio = 1,
         axis.text = element_text(size=12),
@@ -149,7 +150,7 @@ for_df <- data.frame(X = coordinates(forest)[,1],
 traps <- as.data.frame(nybears$traplocs/1000)
 
 tel <- nybears$teldata %>%
-  select(id=animalid, x1 = X_UTM, y1 = Y_UTM, fix = fixnum) %>%
+  dplyr::select(id=animalid, x1 = X_UTM, y1 = Y_UTM, fix = fixnum) %>%
   mutate(x1 = x1/1000, y1=y1/1000) %>%
   arrange(id, fix)
 
@@ -159,7 +160,7 @@ pbears0 <- ggplot()+
                        "% Forest ", limits=c(0,1)) +
   geom_point(data=traps, aes(x=X_UTM, y=Y_UTM), 
              pch=3, color="gray30", stroke=0.7) +
-  labs(y = NULL, x = NULL, title = expression("New York black bear data")) +
+  labs(y = NULL, x = NULL, title = expression("(a) New York black bear data")) +
   geom_path(data=tel, aes(x=x1, y=y1, color=id)) +
   scale_color_manual(values=c("purple2", "blue2", "red2")) +
   theme_bw() + guides(color = F) + 
@@ -173,4 +174,74 @@ pbears <- (pbears0+theme(legend.position = "none"))/pbears0
 #----FINAL PLOT----
     "FINAL PLOT"
 
-pbears | pdwc | pdiff
+#pbears | pdwc | pdiff
+
+
+#----Final plot 2----
+
+library(gridExtra)
+
+# Convert to grobs
+#plots <- list(pbears0, pdwc, pdiff)
+
+# plots <- list(pbears0, p2, p3, p5, p4)
+# lst_p <- lapply(plots, ggplotGrob)
+# 
+# # Plot using gridExtra and grid
+# layout_mat <-  matrix(c(1,2,2,3,4,4,6,6,5,5,7,7), byrow = F, ncol = 3, nrow = 4)
+# 
+# test <- gridExtra::grid.arrange(
+#   grobs = list(
+#     grid::nullGrob(),
+#     lst_p[[1]],  
+#     grid::nullGrob(),
+#     lst_p[[2]], lst_p[[4]],
+#     lst_p[[3]], lst_p[[5]]),
+#   layout_matrix = layout_mat)
+
+
+# devtools::install_github('baptiste/egg')
+library(egg)
+
+# test_p1 <- ggarrange(ggplot(), pbears0, ggplot(), ncol=1)
+# test_p2 <- ggarrange(p2, p5, p3, p4, nrow = 2, byrow = T)
+# 
+# grid.arrange(grid::nullGrob(), pbears0, grid::nullGrob(), 
+#              test_p2, ncol=2, #widths = c(1,2),
+#              layout_matrix = matrix(c(1,2,2,3,4,4,4,4), ncol = 2) )
+
+
+# grid.arrange(
+#   grid::nullGrob(), 
+#   set_panel_size(width = unit(1, "in"), height = unit(1, "in"), pbears0), 
+#   grid::nullGrob(), 
+#   test_p2, 
+#   ncol=2, layout_matrix = matrix(c(1,2,2,3,4,4,4,4), ncol = 2) )
+
+ap1 <- set_panel_size(pbears0, width = unit(3, "in"), height = unit(3, "in"))
+ap2  <- set_panel_size(p2, width = unit(3, "in"), height = unit(3, "in"))
+ap3  <- set_panel_size(p5, width = unit(3, "in"), height = unit(3, "in"))
+ap4  <- set_panel_size(p3, width = unit(3, "in"), height = unit(3, "in"))
+ap5  <- set_panel_size(p4, width = unit(3, "in"), height = unit(3, "in"))
+
+out <- grid.arrange(
+  grid::nullGrob(), 
+  ap1,
+  grid::nullGrob(), 
+  ap2, ap4, ap3, ap5,
+  layout_matrix = matrix(c(1,2,2,3,4,4,5,5,6,6,7,7), nrow = 4))
+
+# ggplot2::ggsave(plot = out, filename = "test.pdf", device = "pdf",
+#                 path = "/Users/gatesdupont/Desktop", scale = 0.75,
+#                 width = 15, height = 11, units = "in")
+
+
+# ggplot2::ggsave(plot = out, filename = "test.pdf", device = "pdf",
+#                 path = "/Users/gatesdupont/Desktop", scale = 1.6,
+#                 width = 7.2, height = 5.25, units = "in")
+
+ggplot2::ggsave(plot = out, filename = "Figure3.pdf", device = "pdf", dpi = 600,
+                path = "/Users/gatesdupont/Desktop", scale = 1.94,
+                width = 6, height = 4.375, units = "in")
+
+

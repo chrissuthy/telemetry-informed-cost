@@ -130,7 +130,7 @@ traps <- traps %>%
 
 
 # Landscape
-p1 <- ggplot() +
+px <- ggplot() +
   # geom_rect(data = df_rect, 
   #           color = "black", size = 2,
   #           mapping = aes(
@@ -155,7 +155,7 @@ p1 <- ggplot() +
     panel.grid = element_blank())
 
 # Track
-p2 <- ggplot() +
+p4 <- ggplot() +
   lims(x = c(11.9, 25.9), 
        y = c(8.3, 22.3)) +
   geom_rect(data = df_rect, fill="yellow",
@@ -189,7 +189,7 @@ p2 <- ggplot() +
 traps[1,5] <- 3 # was NA
 
 # Traps
-p3 <- ggplot() +
+p5 <- ggplot() +
   lims(x = c(11.9, 25.9), 
        y = c(8.3, 22.3)) +
   # White background
@@ -232,6 +232,87 @@ p3 <- ggplot() +
     panel.grid = element_blank())
 
 # Together 1 x 3
-ps_big <- p1 + p2 + p3
+# ps_big <- p1 + p2 + p3
+# 
+# ps_small / ps_big
 
-ps_small / ps_big
+
+
+
+
+#----Together----
+
+# # Convert to grobs
+# plots <- list(pf1, pf2, pf3, pf4, pf5)
+# lst_p <- lapply(plots, ggplotGrob)
+# 
+# # Plot using gridExtra and grid
+# layout_mat <-  matrix(c(1,2,2,3,4,4,6,6,5,5,7,7), byrow = F, ncol = 3, nrow = 4)
+# 
+# gridExtra::grid.arrange(
+#   grid::nullGrob(),  # 1
+#   lst_p[[1]],        # 2
+#   grid::nullGrob(),  # 3
+#   pf2, pf3,          # 4,5
+#   pf4, pf5,          # 6,7
+#   layout_matrix = layout_mat)
+
+library(gridExtra)
+
+pf1 <- p1 + theme(legend.position = "bottom", plot.title = element_text(face="plain")) + theme(plot.margin = unit(c(0,0,0,0), "cm"))
+
+pf2 <- p2 + theme(plot.title = element_text(face="plain")) + theme(plot.margin = unit(c(0,0,0,0), "cm"))
+pf3 <- p3 + labs(tag=expression(sigma[step] < sigma[home])) + 
+  theme(plot.margin = unit(c(0,0,0,0), "cm"),
+        panel.grid = element_blank(),
+        plot.tag=element_text(angle=-90, size = 20),
+        plot.tag.position=c(1.0075, 0.5), plot.title = element_text(face="plain"))
+
+pf4 <- p4 + theme(plot.margin = unit(c(0,0,0,0), "cm"))
+pf5 <- p5 + labs(tag=expression(sigma[step] == sigma[home])) + 
+  theme(plot.margin = unit(c(0,0,0,0), "cm"),
+        plot.tag=element_text(angle=-90, size = 20),
+        panel.grid = element_blank(), 
+        plot.tag.position=c(1.0075, 0.5))
+
+
+
+#----Together using egg----
+library(egg)
+
+
+ap1  <- set_panel_size(pf1, width = unit(3, "in"), height = unit(3, "in"))
+ap2  <- set_panel_size(pf2, width = unit(3, "in"), height = unit(3, "in"))
+ap3  <- set_panel_size(pf3, width = unit(3, "in"), height = unit(3, "in"))
+ap4  <- set_panel_size(pf4, width = unit(3, "in"), height = unit(3, "in"))
+ap5  <- set_panel_size(pf5, width = unit(3, "in"), height = unit(3, "in"))
+
+out <- grid.arrange(
+  grid::nullGrob(), 
+  ap1,
+  grid::nullGrob(), 
+  ap2, ap4, ap3, ap5,
+  layout_matrix = matrix(c(1,2,2,3,4,4,5,5,6,6,7,7), nrow = 4))
+
+ggplot2::ggsave(plot = out, filename = "Figure1.pdf", device = "pdf", dpi = 600,
+                path = "/Users/gatesdupont/Desktop", scale = 1.85,
+                width = 5.55, height = 3.75, units = "in")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
