@@ -23,14 +23,17 @@ tel <- nybears$teldata %>%
   mutate(x1 = x1/1000, y1=y1/1000) %>%
   arrange(id, fix)
 
-ggplot()+
+pbears <- ggplot()+
   geom_raster(data=for_df, aes(x=X,y=Y,fill=forest)) +
-  scale_fill_gradientn(colors = alpha(c(brewer.pal(5, "Greens")), alpha = 0.5)) +
+  scale_fill_gradientn(colors = alpha(c(brewer.pal(5, "Greens")), alpha = 0.75),
+                       "% Forest ", limits=c(0,1)) +
   geom_point(data=traps, aes(x=X_UTM, y=Y_UTM), 
              pch=3, color="gray30", stroke=0.7) +
+  labs(y = NULL, x = NULL, title = expression("New York black bear data")) +
   geom_path(data=tel, aes(x=x1, y=y1, color=id)) +
   scale_color_manual(values=c("purple2", "blue2", "red2")) +
   theme_bw() + guides(color = F) + 
   theme(legend.position="bottom", 
+        plot.title = element_text(hjust=0.5),
         aspect.ratio = 1)
   

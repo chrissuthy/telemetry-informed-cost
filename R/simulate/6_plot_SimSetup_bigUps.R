@@ -130,7 +130,7 @@ traps <- traps %>%
 
 
 # Landscape
-p1 <- ggplot() +
+px <- ggplot() +
   # geom_rect(data = df_rect, 
   #           color = "black", size = 2,
   #           mapping = aes(
@@ -139,12 +139,12 @@ p1 <- ggplot() +
   geom_tile(data = df.l, aes(x=x, y=y, fill=layer)) +
   scale_fill_viridis_c("Covariate", direction = -1) +
   geom_rect(data = df_rect, fill=NA,
-            color = "#DC267F", size = 1,
+            color = "black", size = 1,
             mapping = aes(
               xmin = 11.9, xmax = 25.9,
               ymin = 8.3,  ymax = 22.3)) +
-  geom_point(data=traps, pch = 1, color = "black",
-             aes(x=x, y=y), size = 2, stroke = 1) +
+  geom_point(data=traps, pch = 3, color = "black",
+             aes(x=x, y=y), size = 0.9, stroke = 0.8) +
   coord_equal() +
   theme_minimal() +
   labs(x=NULL, y=NULL) +
@@ -155,24 +155,24 @@ p1 <- ggplot() +
     panel.grid = element_blank())
 
 # Track
-p2 <- ggplot() +
+p4 <- ggplot() +
   lims(x = c(11.9, 25.9), 
        y = c(8.3, 22.3)) +
   geom_rect(data = df_rect, fill="yellow",
-            color = "#DC267F", size = 2,
+            color = "black", size = 2,
             mapping = aes(
               xmin = 11.9, xmax = 25.9,
               ymin = 8.3, ymax = 22.3)) +
   geom_tile(data = df.l, aes(x=x, y=y), fill = "white") +
   new_scale("fill") +
   geom_tile(data = df.l, aes(x=x, y=y, fill=layer)) +
-  scale_fill_viridis_c("Covariate", alpha=0.85, direction = -1) +
+  scale_fill_viridis_c("Covariate", alpha=0.55, direction = -1) +
   geom_path(data=track, aes(x=x, y=y), 
             color = alpha("white", 0), size=0.8) +
   geom_path(data=track, aes(x=x, y=y), 
-            color = alpha("#DC267F", 0.2), size=0.7) +
+            color = alpha(viridis(5)[2], 0.4), size=0.7) +
   geom_rect(data = df_rect, fill=NA,
-            color = "#DC267F", size = 2,
+            color = "black", size = 2,
             mapping = aes(
               xmin = 11.9, xmax = 25.9,
               ymin = 8.3, ymax = 22.3)) +
@@ -186,13 +186,15 @@ p2 <- ggplot() +
     legend.position = "none",
     panel.grid = element_blank()); p2
 
+traps[1,5] <- 3 # was NA
+
 # Traps
-p3 <- ggplot() +
+p5 <- ggplot() +
   lims(x = c(11.9, 25.9), 
        y = c(8.3, 22.3)) +
   # White background
   geom_rect(data = df_rect, fill=NA,
-            color = "#DC267F", size = 2,
+            color = "black", size = 2,
             mapping = aes(
               xmin = 11.9, xmax = 25.9,
               ymin = 8.3,  ymax = 22.3)) +
@@ -200,15 +202,15 @@ p3 <- ggplot() +
   geom_tile(data = df.l, aes(x=x, y=y), fill = "white") +
   # Movement track
   geom_path(data=track, aes(x=x, y=y), 
-            color = alpha("#DC267F", 0.3), size=0.9) +
+            color = alpha(viridis(5)[2], 0.2), size=0.9) +
   # SCR traps
   new_scale("color") +
   # # Border
   # geom_point(data=traps, pch = 21, color = "black",
   #            aes(x=x, y=y, size = dets+0.75)) +
   # Fill
-  geom_point(data=traps, pch = 1,
-             aes(x=x, y=y), size = 2.8, stroke=1.2) +
+  geom_point(data=traps, pch = 3,
+             aes(x=x, y=y), size = 1.6, stroke=0.9) +
   geom_point(data=traps, pch = 1,
              aes(x=x, y=y, color = pres, size = dets+3), stroke=3) +
   geom_point(data=traps, pch = 16,
@@ -227,9 +229,90 @@ p3 <- ggplot() +
     plot.title = element_text(hjust=0.5, face = "bold", size=16),
     axis.text = element_blank(),
     legend.position = "none",
-    panel.grid = element_blank()); p3
+    panel.grid = element_blank())
 
 # Together 1 x 3
-ps_big <- p1 + p2 + p3
+# ps_big <- p1 + p2 + p3
+# 
+# ps_small / ps_big
 
-ps_small / ps_big
+
+
+
+
+#----Together----
+
+# # Convert to grobs
+# plots <- list(pf1, pf2, pf3, pf4, pf5)
+# lst_p <- lapply(plots, ggplotGrob)
+# 
+# # Plot using gridExtra and grid
+# layout_mat <-  matrix(c(1,2,2,3,4,4,6,6,5,5,7,7), byrow = F, ncol = 3, nrow = 4)
+# 
+# gridExtra::grid.arrange(
+#   grid::nullGrob(),  # 1
+#   lst_p[[1]],        # 2
+#   grid::nullGrob(),  # 3
+#   pf2, pf3,          # 4,5
+#   pf4, pf5,          # 6,7
+#   layout_matrix = layout_mat)
+
+library(gridExtra)
+
+pf1 <- p1 + theme(legend.position = "bottom", plot.title = element_text(face="plain")) + theme(plot.margin = unit(c(0,0,0,0), "cm"))
+
+pf2 <- p2 + theme(plot.title = element_text(face="plain")) + theme(plot.margin = unit(c(0,0,0,0), "cm"))
+pf3 <- p3 + labs(tag=expression(sigma[step] < sigma[home])) + 
+  theme(plot.margin = unit(c(0,0,0,0), "cm"),
+        panel.grid = element_blank(),
+        plot.tag=element_text(angle=-90, size = 20),
+        plot.tag.position=c(1.0075, 0.5), plot.title = element_text(face="plain"))
+
+pf4 <- p4 + theme(plot.margin = unit(c(0,0,0,0), "cm"))
+pf5 <- p5 + labs(tag=expression(sigma[step] == sigma[home])) + 
+  theme(plot.margin = unit(c(0,0,0,0), "cm"),
+        plot.tag=element_text(angle=-90, size = 20),
+        panel.grid = element_blank(), 
+        plot.tag.position=c(1.0075, 0.5))
+
+
+
+#----Together using egg----
+library(egg)
+
+
+ap1  <- set_panel_size(pf1, width = unit(3, "in"), height = unit(3, "in"))
+ap2  <- set_panel_size(pf2, width = unit(3, "in"), height = unit(3, "in"))
+ap3  <- set_panel_size(pf3, width = unit(3, "in"), height = unit(3, "in"))
+ap4  <- set_panel_size(pf4, width = unit(3, "in"), height = unit(3, "in"))
+ap5  <- set_panel_size(pf5, width = unit(3, "in"), height = unit(3, "in"))
+
+out <- grid.arrange(
+  grid::nullGrob(), 
+  ap1,
+  grid::nullGrob(), 
+  ap2, ap4, ap3, ap5,
+  layout_matrix = matrix(c(1,2,2,3,4,4,5,5,6,6,7,7), nrow = 4))
+
+ggplot2::ggsave(plot = out, filename = "Figure1.pdf", device = "pdf", dpi = 600,
+                path = "/Users/gatesdupont/Desktop", scale = 1.85,
+                width = 5.55, height = 3.75, units = "in")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

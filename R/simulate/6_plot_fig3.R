@@ -31,7 +31,7 @@ ggquant <- function(y, int){
 }
 
 meantrim <- function(y){
-  result <- mean(y, trim = 0.1)
+  result <- mean(y, trim = 0)
   return(result)
 }
 
@@ -115,6 +115,7 @@ ntel5_shared <- read.table("./output/small ups/est_ntel=5_share=TRUE/results.txt
 # No movement
 bigups_noMove <- read.table("./output/big ups/est_noMove/results.txt") %>%
   as.data.frame() %>%
+  filter(sig < 3) %>% # Remove 4 bad model fits
   select(-p0) %>%
   gather() %>%
   mutate(true = rep(c(t_alpha2, t_sig, t_d0), each = nrow(.)/3)) %>%
@@ -191,7 +192,7 @@ df <- rbind(
 results0 <- df %>%
   group_by(key, Scenario, Upsilon, ntel) %>%
   #na.omit() %>%
-  summarise(trim.mean = mean(prbias, trim = 0.1),
+  summarise(p.mean = mean(prbias, trim = 0),
             bias_upper = quantile(prbias, 0.75),
             bias_lower = quantile(prbias, 0.25))
 
@@ -200,7 +201,7 @@ results0 <- df %>%
 #   Scenario = c("ntel=3, shared", "ntel=5, unshared"),
 #   Upsilon = "low-res",
 #   ntel = c(3, 5),
-#   trim.mean = NA,
+#   p.mean = NA,
 #   bias_upper = NA,
 #   bias_lower = NA
 # )
@@ -209,34 +210,33 @@ results0 <- df %>%
 results <- results0 %>%
   #rbind(., missing_results) %>%
   mutate(key = recode(key,
-    cost = "Cost ~ (alpha)",
-    density = "Density ~ (D)",
+    cost = "Cost ~ (alpha[1])",
+    density = "Density ~ (lambda)",
     sigma = "sigma[SCR]",
     sigma_move = "sigma[MM]")) %>%
   mutate(Upsilon = recode(Upsilon,
-    `high-res` = "sigma < sigma[det]",
-    `low-res` = "sigma == sigma[det]"))
+    `high-res` = "sigma[step] < sigma[home]",
+    `low-res` = "sigma[step] == sigma[home]"))
 
 
 #----NEW plot----
 
 # Color palettes
-ibm <- c("#648fff", "#785ef0", "#dc267f")
-pal <- c("black", ibm[1], ibm[1], ibm[2], ibm[2], ibm[3], ibm[3])
-pal <- c("black", ibm[1], ibm[3], ibm[1], ibm[3], ibm[1], ibm[3])
+#pal <- c("#D55E00", "#009E73", "#0072B2","#009E73", "#0072B2","#009E73", "#0072B2")
+pal <- c("black", "#0072B2", "#D55E00", "#0072B2", "#D55E00", "#0072B2", "#D55E00")
 
 # Facet custom scales
 scales_y <- list(
-  "Cost ~ (alpha)" = scale_y_continuous(
+  "Cost ~ (alpha[1])" = scale_y_continuous(
     limits = c(-60,60), breaks = c(-50, -25, 0, 25, 50)),
-  "Density ~ (D)" = scale_y_continuous(
+  "Density ~ (lambda)" = scale_y_continuous(
     limits = c(-15,15), breaks = c(-10, 0, 10)))
 
 # FIGURE
-ggplot(data = results %>%
+p1 <- ggplot(data = results %>%
          filter(key %in% c(
-           expression(Cost ~ (alpha)),
-           expression(Density ~ (D)))),
+           expression(Cost ~ (alpha[1])),
+           expression(Density ~ (lambda)))),
        aes(x = NA, color = Scenario, shape = Scenario)) +
   
   # Bias bar
@@ -246,14 +246,14 @@ ggplot(data = results %>%
   
   # Main results
   geom_pointrange(position = position_dodge(1.15), size = 0.7,
-                  aes(y = trim.mean, ymin = bias_lower, ymax = bias_upper)) +
+                  aes(y = p.mean, ymin = bias_lower, ymax = bias_upper)) +
   
   # Color
   scale_color_manual(values = pal) +
   scale_shape_manual(values = c(17, 19, 15, 19, 15, 19, 15)) +
   
   # Ntel text
-  geom_text(aes(y = trim.mean, label = ntel), 
+  geom_text(aes(y = p.mean, label = ntel), 
             color = "white", size = 2, fontface = "bold",
             position = position_dodge(1.15)) +
   
@@ -264,7 +264,7 @@ ggplot(data = results %>%
     scales = list(y = scales_y)) +
   
   # Labs
-  labs(y = "% Relaive bias", x = NULL) +
+  labs(y = "% Relative bias", x = NULL) +
   
   # Theme
   theme_minimal() +
@@ -278,6 +278,8 @@ ggplot(data = results %>%
         axis.text.x = element_blank())
 
 
-
+ggsave(filename = "App3FigS1.pdf", plot = p1, device="pdf",
+       dpi = 600, scale = 0.9, height = 5.25, width = 6.75,
+       path = "/Users/gatesdupont/Desktop")
 
 
