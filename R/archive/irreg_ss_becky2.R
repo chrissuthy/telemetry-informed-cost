@@ -157,9 +157,35 @@ source("./R/likelihoods/telem-cost-nll-becky.R")
 # registerDoParallel(cl)  
 
 sim <- 1
-
 file <- paste0(getwd(), "/output/", select_ups, "/model_data/cost_data_light/cost_data_", sim, ".RData")
 spatdata <- readRDS(file)
+
+teldata1   = teldata[[sim]][inds]
+spatdata1  = spatdata[inds]
+landscape1 = landscape[[sim]]
+scr_ss1 = scr_ss[[sim]]
+K1 = K 
+scr_y1 = y[[sim]]
+rm(teldata, spatdata, landscape, scr_ss, K, y)
+
+
+
+#----Add an empty buffer around the state-space----
+# This is removed by likelihood via Dan's edit
+# and should allow for irregular rasters
+scr_ss2 <- raster::extend(x = scr_ss1, y = c(1,1))
+
+sqrt(ncell(scr_ss1))
+sqrt(ncell(scr_ss2))
+
+plot(scr_ss1)
+plot(scr_ss2)
+lines(extent(scr_ss2))
+
+nrow(coordinates(scr_ss1))
+nrow(coordinates(scr_ss2)[which(!is.na(values(scr_ss2))),])
+
+
 
 # NLM likelihood evaluation
 mmscreco <- nlm(
@@ -167,11 +193,11 @@ mmscreco <- nlm(
   p,
   mod = "gauss", share_sigma = share_sig,
   hessian = F, print.level = 2,
-  teldata   = teldata[[sim]][inds],
-  spatdata  = spatdata[inds],
-  landscape = landscape[[sim]],
-  scr_ss = scr_ss[[sim]],
-  K = K, scr_y = y[[sim]], trap_locs = traps,
+  teldata   = teldata1,
+  spatdata  = spatdata1,
+  landscape = landscape1,
+  scr_ss = scr_ss2,
+  K = K1, scr_y = scr_y1, trap_locs = traps,
   dist = "lcp", popcost=T, popmove=T, fixcost=F, use.sbar=T, prj=NULL)
 
 est <- mmscreco$estimate

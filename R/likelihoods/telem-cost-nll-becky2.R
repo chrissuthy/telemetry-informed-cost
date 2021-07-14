@@ -78,8 +78,12 @@ scr_move_cost_like_rw <- function(
   # Expanding K for later use
   if(length(K)==1) K<- rep(K,nrow(trap_locs)) # Generalized for irregular sampling periods
   
-  G <- coordinates(scr_ss) # Pixels ###### NOV4 CHANGED THIS TO SCR_SS INSTEAD OF LANDSCAPE!!!
-  nG <- nrow(G) # Number of pixels
+  G <- coordinates(scr_ss) # Pixels
+  G <- G[which(!is.na(values(scr_ss))),]
+  nG <- nrow(G) # Number of pixel
+  
+  # G <- coordinates(scr_ss) # Pixels ###### NOV4 CHANGED THIS TO SCR_SS INSTEAD OF LANDSCAPE!!!
+  # nG <- nrow(G) # Number of pixels
   
   # Cost distance pieces
   cost <- exp(a2_scr*landscape) # Cost surface w/ proposed parameter
