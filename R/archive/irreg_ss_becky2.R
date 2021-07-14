@@ -1,3 +1,6 @@
+# THIS FILE IS TO TEST DAN's FIX TO THE LIKELIHOOD TO ALLOW IRREGULAR SCR STATE_SPACES (scr_ss)
+# THIS WAS A SUCCESS!POINT ESTIMATES REMAINED THE SAME.
+
 # # # # # # # # # # # # # # #
 #                           #
 #  ____HEY!!_DO THIS!!____  #
