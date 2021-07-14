@@ -161,23 +161,32 @@ sim <- 1
 file <- paste0(getwd(), "/output/", select_ups, "/model_data/cost_data_light/cost_data_", sim, ".RData")
 spatdata <- readRDS(file)
 
+
+teldata1   = teldata[[sim]][inds]
+spatdata1  = spatdata[inds]
+landscape1 = landscape[[sim]]
+scr_ss1 = scr_ss[[sim]]
+K1 = K 
+scr_y1 = y[[sim]]
+rm(teldata, spatdata, landscape, scr_ss, K, y)
+
 # NLM likelihood evaluation
 mmscreco <- nlm(
   scr_move_cost_like_rw,
   p,
   mod = "gauss", share_sigma = share_sig,
   hessian = F, print.level = 2,
-  teldata   = teldata[[sim]][inds],
-  spatdata  = spatdata[inds],
-  landscape = landscape[[sim]],
-  scr_ss = scr_ss[[sim]],
-  K = K, scr_y = y[[sim]], trap_locs = traps,
+  teldata   = teldata1,
+  spatdata  = spatdata1,
+  landscape = landscape1,
+  scr_ss = scr_ss1,
+  K = K1, scr_y = scr_y1, trap_locs = traps,
   dist = "lcp", popcost=T, popmove=T, fixcost=F, use.sbar=T, prj=NULL)
 
 est <- mmscreco$estimate
 
-file <- paste0("./output/", select_ups, "/", file_id, "/mmscreco_", sim, ".txt")
-write.table(est, file)
+#file <- paste0("./output/", select_ups, "/", file_id, "/mmscreco_", sim, ".txt")
+#write.table(est, file)
 
 # Back-transform point estimates
 final <- c()
@@ -191,7 +200,7 @@ final[6] <- exp(est[6])
 if(share_sig == FALSE){final[7] <- exp(est[7])}
 
 # Output
-results[[sim]] <- final
+final
 
 
 # results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {
