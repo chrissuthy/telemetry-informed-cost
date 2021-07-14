@@ -149,7 +149,7 @@ if(select_ups == "small ups"){
 
 #----Fit movement model----
 
-source("./R/likelihoods/telem-cost-nll-becky.R")
+source("./R/likelihoods/telem-cost-nll-becky2.R")
 
 # Parallel setup
 # ncores = detectCores() # Number of available cores -1 to leave for computer
@@ -202,8 +202,8 @@ mmscreco <- nlm(
 
 est <- mmscreco$estimate
 
-file <- paste0("./output/", select_ups, "/", file_id, "/mmscreco_", sim, ".txt")
-write.table(est, file)
+# file <- paste0("./output/", select_ups, "/", file_id, "/mmscreco_", sim, ".txt")
+# write.table(est, file)
 
 # Back-transform point estimates
 final <- c()

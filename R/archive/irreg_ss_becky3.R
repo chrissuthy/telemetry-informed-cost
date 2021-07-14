@@ -1,5 +1,6 @@
-# THIS SERVED AS A CONTROL FOR irreg_ss_becky2 and _beacky3.R
-# TO ENSURE POINT ESTIMATES STAYED EXACTLY THE SAME IN THOSE SCRIPTS.
+# THIS FILE IS TO TEST DAN's FIX TO THE LIKELIHOOD TO ALLOW IRREGULAR SCR STATE_SPACES (scr_ss)
+# AS WELL AS TO SEE IF THE RESULTS ARE INVARIANT TO EXTERIOR NA PIXELS IN THE LANDSCAPE.
+# THAT WAS THE CASE, SO, A SUCCESS!
 
 # # # # # # # # # # # # # # #
 #                           #
@@ -152,7 +153,7 @@ if(select_ups == "small ups"){
 
 #----Fit movement model----
 
-source("./R/likelihoods/telem-cost-nll-becky.R")
+source("./R/likelihoods/telem-cost-nll-becky2.R")
 
 # Parallel setup
 # ncores = detectCores() # Number of available cores -1 to leave for computer
@@ -160,10 +161,8 @@ source("./R/likelihoods/telem-cost-nll-becky.R")
 # registerDoParallel(cl)  
 
 sim <- 1
-
 file <- paste0(getwd(), "/output/", select_ups, "/model_data/cost_data_light/cost_data_", sim, ".RData")
 spatdata <- readRDS(file)
-
 
 teldata1   = teldata[[sim]][inds]
 spatdata1  = spatdata[inds]
@@ -173,6 +172,41 @@ K1 = K
 scr_y1 = y[[sim]]
 rm(teldata, spatdata, landscape, scr_ss, K, y)
 
+
+
+#----Add an empty buffer around the state-space----
+# This is removed by likelihood via Dan's edit
+# and should allow for irregular rasters
+scr_ss2 <- raster::extend(x = scr_ss1, y = c(1,1))
+
+sqrt(ncell(scr_ss1))
+sqrt(ncell(scr_ss2))
+
+plot(scr_ss1)
+plot(scr_ss2)
+lines(extent(scr_ss2))
+
+nrow(coordinates(scr_ss1))
+nrow(coordinates(scr_ss2)[which(!is.na(values(scr_ss2))),])
+
+
+#----Do the same thing for the spatdata and landscape----
+# spatdata_r0 <- rasterFromXYZ(cbind(spatdata1[[1]][,1:2], include=1))
+# spatdata_r <- raster::extend(x = spatdata_r0, y = c(1,1))
+# 
+# spatdata_fix <- as.data.frame(spatdata_r, xy=T) %>%
+#   left_join(as.data.frame(spatdata2[[1]])) %>%
+#   mutate(sbar = if_else(is.na(sbar), 0, sbar)) %>%
+#   select(x, y, sbar, include) %>%
+#   as.matrix
+# 
+# spatdata2 <- spatdata1
+# spatdata2[[1]] <- spatdata_fix
+
+# Actually, just do landscape. Spatdata is not a raster.
+landscape2 <- extend(landscape1, y = c(1,1))
+
+
 # NLM likelihood evaluation
 mmscreco <- nlm(
   scr_move_cost_like_rw,
@@ -181,15 +215,15 @@ mmscreco <- nlm(
   hessian = F, print.level = 2,
   teldata   = teldata1,
   spatdata  = spatdata1,
-  landscape = landscape1,
-  scr_ss = scr_ss1,
+  landscape = landscape2,
+  scr_ss = scr_ss2,
   K = K1, scr_y = scr_y1, trap_locs = traps,
   dist = "lcp", popcost=T, popmove=T, fixcost=F, use.sbar=T, prj=NULL)
 
 est <- mmscreco$estimate
 
-#file <- paste0("./output/", select_ups, "/", file_id, "/mmscreco_", sim, ".txt")
-#write.table(est, file)
+# file <- paste0("./output/", select_ups, "/", file_id, "/mmscreco_", sim, ".txt")
+# write.table(est, file)
 
 # Back-transform point estimates
 final <- c()
@@ -203,7 +237,7 @@ final[6] <- exp(est[6])
 if(share_sig == FALSE){final[7] <- exp(est[7])}
 
 # Output
-final
+results[[sim]] <- final
 
 
 # results <- foreach(sim=1:sims, .packages = c(.packages())) %dopar% {

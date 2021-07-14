@@ -20,7 +20,8 @@ scr_move_cost_like_rw <- function(
   
   nguys <- length(teldata)
   ll <- rep(NULL,nguys)
-  np <- ncol(spatdata[[1]])-2
+  # I think we only have support for 1 cost surface currently 
+  np <- 1 #ncol(spatdata[[1]])-2 
   
   # This should really be limited to...
   # - fixcost == F
